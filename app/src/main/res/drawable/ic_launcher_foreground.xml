@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Outer Left Broadcast Wave (Soft Mint) -->
+    <path
+        android:pathData="M 22,28 C 10,42 10,66 22,80"
+        android:strokeColor="#52B788"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+        
+    <!-- Outer Right Broadcast Wave (Soft Mint) -->
+    <path
+        android:pathData="M 86,28 C 98,42 98,66 86,80"
+        android:strokeColor="#52B788"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Inner Left Broadcast Wave (Soft Mint) -->
+    <path
+        android:pathData="M 31,37 C 23,46 23,62 31,71"
+        android:strokeColor="#52B788"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Inner Right Broadcast Wave (Soft Mint) -->
+    <path
+        android:pathData="M 77,37 C 85,46 85,62 77,71"
+        android:strokeColor="#52B788"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Centered Golden Leaf Body -->
+    <path
+        android:pathData="M 54,20 C 68,36 70,62 54,82 C 38,62 40,36 54,20 Z"
+        android:fillColor="#FBBF24" />
+
+    <!-- Leaf Central Stem (Dark Forest Green Contrast) -->
+    <path
+        android:pathData="M 54,22 L 54,82"
+        android:strokeColor="#1B4332"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Leaf Right Vein 1 -->
+    <path
+        android:pathData="M 54,38 L 63,44"
+        android:strokeColor="#1B4332"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Leaf Left Vein 1 -->
+    <path
+        android:pathData="M 54,38 L 45,44"
+        android:strokeColor="#1B4332"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Leaf Right Vein 2 -->
+    <path
+        android:pathData="M 54,54 L 64,61"
+        android:strokeColor="#1B4332"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Leaf Left Vein 2 -->
+    <path
+        android:pathData="M 54,54 L 44,61"
+        android:strokeColor="#1B4332"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

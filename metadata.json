@@ -1,0 +1,6 @@
+{
+  "name": "Kisan Alert",
+  "description": "Kisan Alert is a native Android app optimized for smallholder farmers, providing real-time voice/SMS agricultural warnings, an AI Crop Advisory, a Crop Health Logger, and history tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
