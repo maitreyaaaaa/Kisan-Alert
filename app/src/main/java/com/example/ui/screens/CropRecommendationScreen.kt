@@ -202,6 +202,52 @@ fun CropRecommendationScreen(viewModel: KisanAlertViewModel, scope: CoroutineSco
           )
         }
 
+        // Visual Preset Selector Row for Illiterate/Vernacular Farmers
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+          Text(
+            text = "Nutrient Presets / पोषक तत्व सुझाव",
+            color = Color(0xFF94A3B8),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold
+          )
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            val presets = listOf(
+              Triple("Balanced", Triple("65", "45", "40"), "सामान्य"),
+              Triple("Rich Clay", Triple("90", "60", "50"), "काली मिट्टी"),
+              Triple("Sandy Dry", Triple("30", "25", "20"), "रेतीली")
+            )
+            presets.forEach { preset ->
+              val isSelected = viewModel.nitrogen == preset.second.first &&
+                viewModel.phosphorus == preset.second.second &&
+                viewModel.potassium == preset.second.third
+              Button(
+                onClick = {
+                  viewModel.nitrogen = preset.second.first
+                  viewModel.phosphorus = preset.second.second
+                  viewModel.potassium = preset.second.third
+                },
+                colors = ButtonDefaults.buttonColors(
+                  containerColor = if (isSelected) Color(0xFF1B4332) else Color(0xFF1E293B)
+                ),
+                border = BorderStroke(1.dp, if (isSelected) Color(0xFF52B788) else Color(0xFF334155)),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.weight(1f).height(38.dp)
+              ) {
+                Text(
+                  text = if (lang == com.example.util.AppLanguage.HINDI) preset.third else preset.first,
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color.White
+                )
+              }
+            }
+          }
+        }
+
         // pH Level Slider Input (large and visual)
         Column {
           Row(

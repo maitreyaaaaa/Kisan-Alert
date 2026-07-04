@@ -40,6 +40,7 @@ class KisanAlertViewModel : ViewModel() {
 
   // Settings State
   var isAutoSpeakEnabled by mutableStateOf(true)
+  var isDarkTheme by mutableStateOf(true)
 
 
   // Soil Advisor Inputs

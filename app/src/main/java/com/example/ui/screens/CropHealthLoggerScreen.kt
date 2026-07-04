@@ -153,6 +153,71 @@ fun CropHealthLoggerScreen(viewModel: KisanAlertViewModel, scope: CoroutineScope
       }
     }
 
+    // Common Symptoms Quick Catalog
+    Card(
+      colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+      border = BorderStroke(1.dp, Color(0xFF334155)),
+      shape = RoundedCornerShape(16.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        Text(
+          text = "Common Symptoms Catalog / रोग लक्षण गैलरी",
+          color = Color.White,
+          fontSize = 14.sp,
+          fontWeight = FontWeight.Bold
+        )
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+          val samples = listOf(
+            Triple("Maize Root Rot", "HEALTHY", "मक्का रोट"),
+            Triple("Rice Blast", "BLAST", "धान ब्लास्ट"),
+            Triple("Cotton Blight", "BLIGHT", "कपास ब्लाइट")
+          )
+          samples.forEach { sample ->
+            Box(
+              modifier = Modifier
+                .weight(1.0f)
+                .background(Color(0xFF0F172A), shape = RoundedCornerShape(10.dp))
+                .border(1.dp, Color(0xFF334155), shape = RoundedCornerShape(10.dp))
+                .clickable {
+                  viewModel.simulatedImageName = sample.second
+                  viewModel.runCropLeafDiagnosis(sample.second, context)
+                }
+                .padding(8.dp),
+              contentAlignment = Alignment.Center
+            ) {
+              Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                  modifier = Modifier
+                    .size(48.dp)
+                    .background(Color(0xFF1E293B), shape = RoundedCornerShape(6.dp)),
+                  contentAlignment = Alignment.Center
+                ) {
+                  LeafDiagnosticCanvas(imageType = sample.second)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                  text = if (lang == com.example.util.AppLanguage.HINDI) sample.third else sample.first,
+                  color = Color.White,
+                  fontSize = 10.sp,
+                  fontWeight = FontWeight.Bold,
+                  textAlign = TextAlign.Center,
+                  maxLines = 1,
+                  overflow = TextOverflow.Ellipsis
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Interactive graphical Leaf Diagnostics Preview
     viewModel.simulatedImageName?.let { imageType ->
       Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -141,6 +141,46 @@ fun SettingsScreen(viewModel: KisanAlertViewModel) {
 
         HorizontalDivider(color = Color(0xFF334155))
 
+        // Switch row: Dark Mode
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+          ) {
+            Icon(Icons.Default.AccountCircle, contentDescription = "Theme Icon", tint = Color(0xFFFBBF24))
+            Column {
+              Text(
+                text = "Dark Mode / डार्क मोड",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+              )
+              Text(
+                text = "Switch between dark and light themes",
+                color = Color(0xFF94A3B8),
+                fontSize = 11.sp
+              )
+            }
+          }
+          Switch(
+            checked = viewModel.isDarkTheme,
+            onCheckedChange = { viewModel.isDarkTheme = it },
+            colors = SwitchDefaults.colors(
+              checkedThumbColor = softMint,
+              checkedTrackColor = Color(0xFF1B4332),
+              uncheckedThumbColor = Color(0xFF94A3B8),
+              uncheckedTrackColor = Color(0xFF334155)
+            ),
+            modifier = Modifier.testTag("dark_theme_switch")
+          )
+        }
+
+        HorizontalDivider(color = Color(0xFF334155))
+
         // Language Select Row
         Row(
           modifier = Modifier.fillMaxWidth(),

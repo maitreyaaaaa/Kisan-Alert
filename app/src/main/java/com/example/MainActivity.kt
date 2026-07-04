@@ -63,8 +63,8 @@ class MainActivity : ComponentActivity() {
     voiceManager = com.example.util.VoiceManager(this)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme(darkTheme = true) {
-        val viewModel: KisanAlertViewModel = viewModel()
+      val viewModel: KisanAlertViewModel = viewModel()
+      MyApplicationTheme(darkTheme = viewModel.isDarkTheme) {
         val coroutineScope = rememberCoroutineScope()
         
         activeViewModel = viewModel
