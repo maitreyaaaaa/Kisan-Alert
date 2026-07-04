@@ -14,10 +14,9 @@ import com.example.data.model.HealthReport
 import com.example.data.model.HistoryLog
 import com.example.data.model.SoilAdvisory
 import com.example.util.AppLanguage
-import com.google.firebase.Firebase
-import com.google.firebase.vertexai.type.content
-import com.google.firebase.vertexai.type.generationConfig
-import com.google.firebase.vertexai.vertexAI
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
+import com.google.ai.client.generativeai.type.generationConfig
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import java.io.File
@@ -32,6 +31,16 @@ class KisanAlertViewModel : ViewModel() {
   // Navigation & Language
   var currentTab by mutableStateOf(0)
   var currentLanguage by mutableStateOf(AppLanguage.ENGLISH)
+
+  // Auth State
+  var isLoggedIn by mutableStateOf(false)
+  var userPhoneNumber by mutableStateOf("")
+  var isAuthLoading by mutableStateOf(false)
+  var authErrorMessage by mutableStateOf<String?>(null)
+
+  // Settings State
+  var isAutoSpeakEnabled by mutableStateOf(true)
+
 
   // Soil Advisor Inputs
   var selectedSoilType by mutableStateOf("Clayey")
@@ -57,8 +66,9 @@ class KisanAlertViewModel : ViewModel() {
     .build()
 
   private val generativeModel by lazy {
-    Firebase.vertexAI.generativeModel(
+    GenerativeModel(
       modelName = "gemini-2.5-flash",
+      apiKey = com.example.BuildConfig.GEMINI_API_KEY,
       generationConfig = generationConfig {
         responseMimeType = "application/json"
       }
@@ -181,11 +191,14 @@ class KisanAlertViewModel : ViewModel() {
         
         val response = generativeModel.generateContent(prompt)
         val responseText = response.text?.trim() ?: throw Exception("Empty response from Gemini")
-        val cleanJson = responseText.removePrefix("```json").removeSuffix("```").trim()
+        val cleanJson = extractJsonBlock(responseText)
         val advisory = moshi.adapter(SoilAdvisory::class.java).fromJson(cleanJson)
         
         withContext(Dispatchers.Main) {
           advisoryResult = advisory
+          if (isAutoSpeakEnabled && advisory != null) {
+            speakSoilAdvisory(advisory)
+          }
         }
       } catch (e: Exception) {
         e.printStackTrace()
@@ -238,18 +251,21 @@ class KisanAlertViewModel : ViewModel() {
           Ensure the response contains ONLY the valid raw JSON object. Do not wrap it in markdown code blocks or add any other text.
         """.trimIndent()
         
-        val inputContent = content {
-          image(bitmap)
-          text(promptText)
-        }
-        
-        val response = generativeModel.generateContent(inputContent)
+        val response = generativeModel.generateContent(
+          content {
+            image(bitmap)
+            text(promptText)
+          }
+        )
         val responseText = response.text?.trim() ?: throw Exception("Empty response from Gemini")
-        val cleanJson = responseText.removePrefix("```json").removeSuffix("```").trim()
+        val cleanJson = extractJsonBlock(responseText)
         val report = moshi.adapter(HealthReport::class.java).fromJson(cleanJson)
         
         withContext(Dispatchers.Main) {
           diagnosticReport = report
+          if (isAutoSpeakEnabled && report != null) {
+            speakCurrentAdvisory(report)
+          }
         }
       } catch (e: Exception) {
         e.printStackTrace()
@@ -330,30 +346,34 @@ class KisanAlertViewModel : ViewModel() {
     }
   }
 
-  /**
-   * Helper to simulate farmer voice query.
-   */
-  fun simulateVoiceRecording(scope: CoroutineScope) {
+  // Callback hooks for MainActivity voice integration
+  var onStartSpeechRecognizer: (() -> Unit)? = null
+  var onSpeakText: ((String) -> Unit)? = null
+
+  fun startVoiceQuery(scope: CoroutineScope) {
+    if (onStartSpeechRecognizer != null) {
+      onStartSpeechRecognizer?.invoke()
+    } else {
+      simulateVoiceRecording(scope)
+    }
+  }
+
+  fun onSpeechRecognized(queryText: String, scope: CoroutineScope) {
     scope.launch(Dispatchers.IO) {
       withContext(Dispatchers.Main) {
-        isRecordingVoice = true
-        recordedQueryText = null
-      }
-      delay(2000) // Simulate recording time
-      withContext(Dispatchers.Main) {
-        isRecordingVoice = false
-        recordedQueryText = "How do I protect my newly planted maize crops from wild boars and root rot during early heavy rain?"
+        recordedQueryText = queryText
         isDiagnosticLoading = true
+        diagnosticReport = null
       }
       
       try {
         val prompt = """
           Answer the following farmer spoken query:
-          "How do I protect my newly planted maize crops from wild boars and root rot during early heavy rain?"
+          "$queryText"
           
           Return a JSON object matching this schema:
           {
-            "diseaseName": "Spoken Query: Maize Root Rot & Wildlife Protection",
+            "diseaseName": "Spoken Query: $queryText",
             "severityPercent": 0.25,
             "remediesList": ["Remedy 1", "Remedy 2", "Remedy 3"],
             "imageType": "HEALTHY"
@@ -364,25 +384,32 @@ class KisanAlertViewModel : ViewModel() {
         
         val response = generativeModel.generateContent(prompt)
         val responseText = response.text?.trim() ?: throw Exception("Empty response from Gemini")
-        val cleanJson = responseText.removePrefix("```json").removeSuffix("```").trim()
+        val cleanJson = extractJsonBlock(responseText)
         val report = moshi.adapter(HealthReport::class.java).fromJson(cleanJson)
         
         withContext(Dispatchers.Main) {
           diagnosticReport = report
+          if (isAutoSpeakEnabled && report != null) {
+            speakCurrentAdvisory(report)
+          }
         }
       } catch (e: Exception) {
         e.printStackTrace()
         withContext(Dispatchers.Main) {
-          diagnosticReport = HealthReport(
-            diseaseName = "Voice Advisory (Offline Mode)",
-            severityPercent = 0.25f,
+          val fallbackReport = HealthReport(
+            diseaseName = "Voice Advisory: $queryText",
+            severityPercent = 0.20f,
             remediesList = listOf(
-              "Ensure trench drainage is cleared immediately to prevent pooling water.",
-              "Construct a simple reflective solar ribbon fence to humanely deter wild boars.",
-              "Apply a light neem cake soil dressing to strengthen root structure naturally."
+              "Keep field moisture monitored.",
+              "Consult local extension officer if symptoms spread.",
+              "Apply organic bio-pesticides or compost to boost immunity."
             ),
             imageType = "HEALTHY"
           )
+          diagnosticReport = fallbackReport
+          if (isAutoSpeakEnabled) {
+            speakCurrentAdvisory(fallbackReport)
+          }
         }
       } finally {
         withContext(Dispatchers.Main) {
@@ -390,6 +417,49 @@ class KisanAlertViewModel : ViewModel() {
         }
       }
     }
+  }
+
+  fun speakCurrentAdvisory(report: HealthReport) {
+    val textToSpeak = buildString {
+      append("Detected issue is ${report.diseaseName}. ")
+      append("Recommended action plan contains: ")
+      report.remediesList.forEachIndexed { index, remedy ->
+        append("Action ${index + 1}: $remedy. ")
+      }
+    }
+    onSpeakText?.invoke(textToSpeak)
+  }
+
+  fun speakSoilAdvisory(advisory: SoilAdvisory) {
+    val textToSpeak = buildString {
+      append("Recommended crop is ${advisory.cropName} with ${advisory.matchPercentage}. ")
+      append("Planting window is ${advisory.plantingWindow}. ")
+      append("Details: ${advisory.details}. ")
+      append("Guidelines include: ")
+      advisory.guidelines.forEachIndexed { index, guideline ->
+        append("Guideline ${index + 1}: $guideline. ")
+      }
+    }
+    onSpeakText?.invoke(textToSpeak)
+  }
+
+  /**
+   * Helper to simulate farmer voice query (fallback).
+   */
+  fun simulateVoiceRecording(scope: CoroutineScope) {
+    scope.launch(Dispatchers.IO) {
+      withContext(Dispatchers.Main) {
+        isRecordingVoice = true
+        recordedQueryText = null
+      }
+      delay(2000) // Simulate recording time
+      withContext(Dispatchers.Main) {
+        isRecordingVoice = false
+      }
+      onSpeechRecognized(
+        "How do I protect my newly planted maize crops from wild boars and root rot during early heavy rain?",
+        scope
+      )
   }
 
   /**
@@ -461,4 +531,37 @@ class KisanAlertViewModel : ViewModel() {
     }
     return file
   }
+
+  private fun extractJsonBlock(rawInput: String): String {
+    val regex = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL)
+    val matchResult = regex.find(rawInput)
+    return matchResult?.value ?: rawInput
+  }
+
+  fun verifyPhoneAndLogin(phone: String, otp: String, scope: CoroutineScope) {
+    scope.launch(Dispatchers.IO) {
+      withContext(Dispatchers.Main) {
+        isAuthLoading = true
+        authErrorMessage = null
+      }
+      
+      delay(1500) // Simulate network delay
+      
+      withContext(Dispatchers.Main) {
+        isAuthLoading = false
+        if (phone.length == 10 && (otp == "1234" || otp.length == 4)) {
+          userPhoneNumber = phone
+          isLoggedIn = true
+        } else {
+          authErrorMessage = "Invalid phone number or OTP. Please try again."
+        }
+      }
+    }
+  }
+
+  fun logout() {
+    isLoggedIn = false
+    userPhoneNumber = ""
+  }
 }
+

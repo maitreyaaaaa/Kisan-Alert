@@ -120,7 +120,7 @@ fun CropHealthLoggerScreen(viewModel: KisanAlertViewModel, scope: CoroutineScope
 
           // Voice Query microphone button with pulsing color state
           Button(
-            onClick = { viewModel.simulateVoiceRecording(scope) },
+            onClick = { viewModel.startVoiceQuery(scope) },
             colors = ButtonDefaults.buttonColors(
               containerColor = if (viewModel.isRecordingVoice) Color(0xFF78350F) else Color(0xFF1E293B)
             ),
@@ -243,7 +243,7 @@ fun CropHealthLoggerScreen(viewModel: KisanAlertViewModel, scope: CoroutineScope
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
               ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                   Text(
                     text = LocalizedStrings.get("disease", lang),
                     color = Color(0xFF94A3B8),
@@ -255,6 +255,16 @@ fun CropHealthLoggerScreen(viewModel: KisanAlertViewModel, scope: CoroutineScope
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold
+                  )
+                }
+
+                androidx.compose.material3.IconButton(
+                  onClick = { viewModel.speakCurrentAdvisory(report) }
+                ) {
+                  Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.VolumeUp,
+                    contentDescription = "Read report aloud",
+                    tint = Color(0xFF52B788)
                   )
                 }
 
