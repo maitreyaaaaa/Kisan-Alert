@@ -314,17 +314,31 @@ fun CropRecommendationScreen(viewModel: KisanAlertViewModel, scope: CoroutineSco
                     fontWeight = FontWeight.ExtraBold
                   )
                 }
-                Box(
-                  modifier = Modifier
-                    .background(Color(0xFF14532D), shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                  Text(
-                    text = advisory.matchPercentage,
-                    color = Color(0xFF52B788),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                  )
+                  androidx.compose.material3.IconButton(
+                    onClick = { viewModel.speakSoilAdvisory(advisory) }
+                  ) {
+                    Icon(
+                      imageVector = androidx.compose.material.icons.Icons.Default.VolumeUp,
+                      contentDescription = "Read report aloud",
+                      tint = Color(0xFF52B788)
+                    )
+                  }
+                  Box(
+                    modifier = Modifier
+                      .background(Color(0xFF14532D), shape = RoundedCornerShape(8.dp))
+                      .padding(horizontal = 8.dp, vertical = 4.dp)
+                  ) {
+                    Text(
+                      text = advisory.matchPercentage,
+                      color = Color(0xFF52B788),
+                      fontSize = 12.sp,
+                      fontWeight = FontWeight.Bold
+                    )
+                  }
                 }
               }
 
