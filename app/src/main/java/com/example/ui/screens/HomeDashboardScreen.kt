@@ -284,33 +284,12 @@ fun HomeDashboardScreen(viewModel: KisanAlertViewModel) {
             fontWeight = FontWeight.Normal
           )
 
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
+          Button(
+            onClick = { selectedAlertForDialog = null },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332)),
+            modifier = Modifier.align(Alignment.End)
           ) {
-            if (alert.type == "VOICE") {
-              var isCallRequested by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-              Button(
-                onClick = {
-                  isCallRequested = true
-                  viewModel.onSpeakText?.invoke(
-                    "Placing outbound voice warning call to your registered phone number. Calling detail: ${alert.title}. Details: ${alert.detailScript}"
-                  )
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBBF24)),
-                modifier = Modifier.padding(end = 8.dp)
-              ) {
-                Text(if (isCallRequested) "Calling..." else "Voice Call Me", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
-              }
-            }
-
-            Button(
-              onClick = { selectedAlertForDialog = null },
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332))
-            ) {
-              Text("Close", color = Color.White)
-            }
+            Text("Close", color = Color.White)
           }
         }
       }

@@ -266,23 +266,3 @@ A production-grade, highly secure `AndroidManifest.xml` was written to enforce e
 
 *   **Real-time Analysis Indicator:** Integrated a modern Material 3 `CircularProgressIndicator` with detailed visual feedback when executing plant pathology requests.
 *   **High-Fidelity Programmatic Leaf Generator:** Implemented custom rendering inside `KisanAlertViewModel` to simulate visual leaf structures (Healthy, Rice Blast, and Bacterial Leaf Blight lesions) onto standard `Bitmap` files, allowing offline testing and visual verification before Gemini classification triggers.
-
----
-
-## 6. Phase 4 Upgrades: Voice-Based Accessibility, Phone/OTP Sign-in, and Settings
-
-To optimize the application for rural India where illiteracy rates are high, we introduced visual-first and voice-first interactions:
-
-### A. Phone & OTP Authentication Flow
-- **Direct Input:** Implemented simple, large form-fields in `LoginScreen.kt` for mobile number inputs.
-- **Verification:** Verification logic uses a simple simulated 4-digit OTP callback (`verifyPhoneAndLogin`) directly tied to `KisanAlertViewModel` to bypass complex email/password registrations.
-- **Routing:** Unauthenticated users are cleanly intercepted on startup within `MainActivity.kt`.
-
-### B. Text-to-Speech (TTS) & Speech-to-Text (STT) Voice Advisory
-- **Voice Manager:** Built a decoupled, runtime-safe wrapper `VoiceManager.kt` around Android's native `TextToSpeech` API. It maps the active user language (English, Hindi, Telugu, Tamil, Kannada) to local voice locales dynamically.
-- **Speech Recognizer Launcher:** MainActivity registers an activity result contract for `RecognizerIntent.ACTION_RECOGNIZE_SPEECH` to capture and translate farmer spoken crop symptoms, querying Gemini directly with the transcribed string.
-- **TTS Readback:** Added speaker buttons (`VolumeUp` icon) next to all diagnostic recommendations and crop recommendations so the details can be read aloud.
-
-### C. Voice Calling & Replay Callbacks
-- Added a "Voice Call Me" button to the RSK Outbound logs and dashboard emergency alerts. When clicked, it activates a TTS simulation of a regional automated call reading the warning to the farmer.
-

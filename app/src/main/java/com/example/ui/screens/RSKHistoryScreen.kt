@@ -288,33 +288,12 @@ fun RSKHistoryScreen(viewModel: KisanAlertViewModel) {
               }
             }
 
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.End,
-              verticalAlignment = Alignment.CenterVertically
+            Button(
+              onClick = { selectedLogForDialog = null },
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332)),
+              modifier = Modifier.align(Alignment.End)
             ) {
-              if (log.type == "CALL") {
-                var isCallRequested by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-                Button(
-                  onClick = {
-                    isCallRequested = true
-                    viewModel.onSpeakText?.invoke(
-                      "Placing outbound voice warning call to your registered phone number. Calling detail: ${log.title}. Details: ${log.summary}"
-                    )
-                  },
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBBF24)),
-                  modifier = Modifier.padding(end = 8.dp)
-                ) {
-                  Text(if (isCallRequested) "Calling..." else "Voice Call Me", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
-                }
-              }
-
-              Button(
-                onClick = { selectedLogForDialog = null },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332))
-              ) {
-                Text("Close", color = Color.White)
-              }
+              Text("Close", color = Color.White)
             }
           }
         }
