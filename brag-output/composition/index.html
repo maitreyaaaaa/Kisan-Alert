@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Matter";
+        src: url("./assets/fonts/MatterUprights-VF.woff2") format("woff2");
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Season Mix";
+        src: url("./assets/fonts/SeasonMixVFUprights.woff2") format("woff2");
+        font-display: swap;
+      }
+
+      :root {
+        --bg: #fafafa;
+        --panel: rgba(255, 255, 255, 0.9);
+        --panel-soft: rgba(255, 255, 255, 0.76);
+        --line: rgba(30, 32, 51, 0.12);
+        --line-strong: rgba(30, 32, 51, 0.18);
+        --text: #1e2033;
+        --text-soft: #5e627c;
+        --text-muted: #787d96;
+        --orange: #f9730c;
+        --amber: #ffa336;
+        --green: #257a4b;
+        --green-soft: #dff4e7;
+        --blue-wash: #d5e2ff;
+        --warning-soft: #fff4df;
+        --shadow: 0 28px 70px rgba(30, 32, 51, 0.08);
+        --radius-xl: 34px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top center, rgba(213, 226, 255, 0.95) 0%, rgba(213, 226, 255, 0.35) 16%, transparent 44%),
+          linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%);
+        color: var(--text);
+        font-family: "Matter", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 84% 12%, rgba(249, 115, 12, 0.12) 0%, transparent 28%),
+          radial-gradient(circle at 12% 92%, rgba(37, 122, 75, 0.1) 0%, transparent 24%);
+      }
+
+      .clip {
+        position: absolute;
+      }
+
+      .scene-shell {
+        position: absolute;
+        inset: 44px;
+      }
+
+      .topbar {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        top: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 20px 26px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid rgba(220, 220, 220, 0.72);
+        box-shadow: 0 14px 34px rgba(30, 32, 51, 0.06);
+        backdrop-filter: blur(18px);
+      }
+
+      .topbar::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        left: 18px;
+        right: 18px;
+        height: 7px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--orange) 0%, var(--amber) 26%, #ffffff 52%, #d9ead7 72%, var(--green) 100%);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .brand-mark {
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        background: #1e2033;
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .brand-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand-title {
+        font-family: "Season Mix", serif;
+        font-size: 34px;
+        line-height: 1;
+      }
+
+      .brand-subtitle {
+        color: var(--text-soft);
+        font-size: 13px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .tag-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .tag {
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e2033;
+        background: rgba(30, 32, 51, 0.06);
+      }
+
+      .tag.primary {
+        background: #1e2033;
+        color: #ffffff;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 156px 92px 82px;
+        opacity: 0;
+      }
+
+      .scene-card {
+        width: 100%;
+        height: 100%;
+        border-radius: var(--radius-xl);
+        background: var(--panel);
+        border: 1px solid rgba(230, 230, 230, 0.96);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        padding: 42px 46px;
+      }
+
+      .scene-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 28px;
+        height: 100%;
+      }
+
+      .scene-grid.equal {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .scene-left,
+      .scene-right {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .section-label {
+        color: var(--text-soft);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+      }
+
+      .hero-title {
+        font-family: "Season Mix", serif;
+        font-size: 90px;
+        line-height: 0.96;
+        letter-spacing: -0.04em;
+        margin-bottom: 18px;
+      }
+
+      .title-lg {
+        font-family: "Season Mix", serif;
+        font-size: 66px;
+        line-height: 0.98;
+        letter-spacing: -0.03em;
+        margin-bottom: 16px;
+      }
+
+      .body-lg {
+        color: var(--text-soft);
+        font-size: 28px;
+        line-height: 1.42;
+      }
+
+      .body-md {
+        color: var(--text-soft);
+        font-size: 23px;
+        line-height: 1.42;
+      }
+
+      .stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .stack.spacious {
+        gap: 22px;
+      }
+
+      .info-card,
+      .kpi-card,
+      .settings-row,
+      .step-card,
+      .alert-card,
+      .question-card,
+      .answer-card {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      .info-card,
+      .kpi-card,
+      .settings-row,
+      .step-card {
+        padding: 22px 24px;
+      }
+
+      .info-card strong,
+      .kpi-card strong,
+      .step-card strong,
+      .alert-card strong,
+      .answer-card strong {
+        display: block;
+        color: var(--text);
+      }
+
+      .info-card strong,
+      .kpi-card strong,
+      .step-card strong {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+
+      .info-card span,
+      .kpi-card span,
+      .step-card span {
+        color: var(--text-soft);
+        font-size: 19px;
+        line-height: 1.36;
+      }
+
+      .hero-note {
+        padding: 26px 28px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 250, 250, 0.92) 100%);
+        border: 1px solid var(--line);
+      }
+
+      .hero-note strong {
+        display: block;
+        font-size: 30px;
+        margin-bottom: 10px;
+      }
+
+      .hero-note span {
+        color: var(--text-soft);
+        font-size: 21px;
+        line-height: 1.38;
+      }
+
+      .persona-panel {
+        display: grid;
+        gap: 18px;
+      }
+
+      .persona-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        font-size: 18px;
+        font-weight: 700;
+        width: fit-content;
+      }
+
+      .split-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .field-box {
+        padding: 20px 22px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        background: rgba(250, 250, 250, 0.95);
+      }
+
+      .field-box label {
+        display: block;
+        color: var(--text-muted);
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+
+      .field-box div {
+        font-size: 25px;
+        font-weight: 700;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 13px 18px;
+        border-radius: 999px;
+        background: #1e2033;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+        width: fit-content;
+      }
+
+      .weather-band {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .kpi-card {
+        background: rgba(213, 226, 255, 0.28);
+        border: 1px solid rgba(106, 136, 226, 0.22);
+      }
+
+      .primary-alert {
+        padding: 24px 26px;
+        border-radius: var(--radius-lg);
+        background: var(--warning-soft);
+        border: 1px solid rgba(255, 163, 54, 0.3);
+      }
+
+      .primary-alert strong {
+        font-size: 29px;
+        margin-bottom: 10px;
+      }
+
+      .primary-alert span {
+        color: var(--text-soft);
+        font-size: 22px;
+        line-height: 1.42;
+      }
+
+      .question-card {
+        padding: 28px 30px;
+        background: rgba(213, 226, 255, 0.34);
+        border: 1px solid rgba(106, 136, 226, 0.2);
+        border-radius: 28px 28px 28px 12px;
+      }
+
+      .question-card strong {
+        font-size: 21px;
+        margin-bottom: 12px;
+      }
+
+      .question-card span {
+        font-size: 30px;
+        line-height: 1.38;
+        color: var(--text);
+      }
+
+      .answer-card {
+        padding: 28px 30px;
+      }
+
+      .answer-card strong {
+        font-size: 34px;
+        line-height: 1.16;
+        margin-bottom: 14px;
+      }
+
+      .answer-card p {
+        color: var(--text-soft);
+        font-size: 24px;
+        line-height: 1.42;
+        margin-bottom: 18px;
+      }
+
+      .alert-card {
+        padding: 28px 30px;
+        background: rgba(255, 244, 223, 0.9);
+        border: 1px solid rgba(255, 163, 54, 0.28);
+      }
+
+      .alert-card strong {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+
+      .alert-card p {
+        color: var(--text-soft);
+        font-size: 24px;
+        line-height: 1.42;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .tab {
+        padding: 18px 12px;
+        text-align: center;
+        border-radius: 999px;
+        background: rgba(30, 32, 51, 0.06);
+        color: var(--text-soft);
+        font-size: 19px;
+        font-weight: 700;
+      }
+
+      .tab.active {
+        background: #1e2033;
+        color: #ffffff;
+      }
+
+      .settings-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 22px;
+      }
+
+      .settings-row span {
+        color: var(--text-soft);
+      }
+
+      .close-block {
+        margin-top: auto;
+        padding-top: 24px;
+      }
+
+      .close-line {
+        font-family: "Season Mix", serif;
+        font-size: 56px;
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+        margin-bottom: 14px;
+      }
+
+      .close-copy {
+        color: var(--text-soft);
+        font-size: 24px;
+        line-height: 1.4;
+      }
+
+      .language-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      .language-chip {
+        padding: 16px 20px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text);
+        box-shadow: 0 12px 26px rgba(30, 32, 51, 0.05);
+      }
+
+      .language-chip.accent {
+        background: rgba(213, 226, 255, 0.42);
+        border-color: rgba(106, 136, 226, 0.22);
+      }
+
+      .language-chip.warm {
+        background: rgba(255, 244, 223, 0.92);
+        border-color: rgba(255, 163, 54, 0.26);
+      }
+
+      .language-chip.green {
+        background: rgba(223, 244, 231, 0.92);
+        border-color: rgba(37, 122, 75, 0.2);
+      }
+
+      .logo-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+      }
+
+      .logo-frame {
+        width: 220px;
+        height: 220px;
+        border-radius: 56px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(230, 230, 230, 0.95);
+        box-shadow: var(--shadow);
+        display: grid;
+        place-items: center;
+        margin-bottom: 28px;
+      }
+
+      .logo-frame img {
+        width: 148px;
+        height: 148px;
+        object-fit: contain;
+      }
+
+      .logo-name {
+        font-family: "Season Mix", serif;
+        font-size: 72px;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        margin-bottom: 14px;
+      }
+
+      .logo-tagline {
+        color: var(--text-soft);
+        font-size: 28px;
+        line-height: 1.4;
+        max-width: 860px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="88"
+      data-width="1920"
+      data-height="1080"
+    >
+      <audio
+        id="music-bed"
+        class="clip"
+        data-start="0"
+        data-duration="88"
+        data-track-index="0"
+        data-volume="0.09"
+        src="./assets/music/happy-beats-business-moves-vol-11-by-ende-dot-app.mp3"
+      ></audio>
+
+      <div id="frame" class="clip scene-shell" data-start="0" data-duration="88" data-track-index="1">
+        <div class="topbar">
+          <div class="brand">
+            <div class="brand-mark">KA</div>
+            <div class="brand-stack">
+              <div class="brand-title">Kisan Alert</div>
+              <div class="brand-subtitle">voice-first farm advisory</div>
+            </div>
+          </div>
+          <div class="tag-row">
+            <div class="tag">India languages</div>
+            <div class="tag primary">Farmer-first flow</div>
+          </div>
+        </div>
+
+        <section id="scene-1" class="clip scene" data-start="0" data-duration="8" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid">
+              <div class="scene-left">
+                <div class="section-label">Kisan Alert</div>
+                <div class="hero-title">One clear farming action at a time.</div>
+                <div class="body-lg">
+                  Built for low-text, local-language farming use. The product keeps guidance short, visible, and usable on the phones farmers already share.
+                </div>
+              </div>
+              <div class="scene-right stack spacious">
+                <div class="hero-note">
+                  <strong>Home, Ask, Alerts, Account</strong>
+                  <span>The flow is intentionally narrow so each screen solves one real task.</span>
+                </div>
+                <div class="hero-note">
+                  <strong>Short answers, not long chat</strong>
+                  <span>The product aims to help a farmer decide what to do next, not drown them in text.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-2" class="clip scene" data-start="8" data-duration="8" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid equal">
+              <div class="scene-left">
+                <div class="section-label">Who It Is For</div>
+                <div class="title-lg">Designed for real farmer context.</div>
+                <div class="body-md">
+                  Shared devices, mixed literacy levels, local language switching, and quick field-side decisions shape the product more than feature count does.
+                </div>
+              </div>
+              <div class="scene-right persona-panel">
+                <div class="info-card">
+                  <strong>Shared-phone use</strong>
+                  <span>The experience keeps identity light and makes helper support visible.</span>
+                </div>
+                <div class="info-card">
+                  <strong>Voice before typing</strong>
+                  <span>Questions should work even when a farmer is busy, outside, or not comfortable typing long text.</span>
+                </div>
+                <div class="info-card">
+                  <strong>Short next steps</strong>
+                  <span>The product favors one usable action over a dense expert dashboard.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-3" class="clip scene" data-start="16" data-duration="10" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid">
+              <div class="scene-left">
+                <div class="section-label">Assisted Sign-In</div>
+                <div class="title-lg">Start with farmer context, not configuration overload.</div>
+                <div class="body-md">
+                  The sign-in flow keeps language, district, crop, and trusted helper context close to the surface so the product feels assisted instead of opaque.
+                </div>
+                <div class="persona-chip">Raju Kumar · Anantapur · Groundnut</div>
+                <div class="stack" style="margin-top: 24px;">
+                  <div class="info-card">
+                    <strong>Primary crop</strong>
+                    <span>Groundnut · early pod fill stage</span>
+                  </div>
+                  <div class="info-card">
+                    <strong>Trusted helper</strong>
+                    <span>Village support contact remains visible for shared-phone continuity.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="scene-right">
+                <div class="split-panel">
+                  <div class="field-box">
+                    <label>Phone number</label>
+                    <div>98600 12345</div>
+                  </div>
+                  <div class="field-box">
+                    <label>One-time passcode</label>
+                    <div>1234</div>
+                  </div>
+                </div>
+                <div class="stack spacious" style="margin-top: 24px;">
+                  <div class="status-pill">Verified. Opening your farm dashboard.</div>
+                  <div class="info-card">
+                    <strong>Why this matters</strong>
+                    <span>Phone-first assisted access fits rural usage norms better than a desktop-style account setup.</span>
+                  </div>
+                  <div class="info-card">
+                    <strong>What stays simple</strong>
+                    <span>Language, village, crop, and support stay visible enough to understand at a glance.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-4" class="clip scene" data-start="26" data-duration="12" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid">
+              <div class="scene-left">
+                <div class="section-label">Home</div>
+                <div class="title-lg">A daily dashboard that leads with the next action.</div>
+                <div class="body-md">
+                  Home should help the farmer decide what to do today, not force them to interpret a dense collection of widgets.
+                </div>
+                <div class="primary-alert" style="margin-top: 26px;">
+                  <strong>Groundnut today: spray only after 6pm</strong>
+                  <span>Heat stress is high in Anantapur this afternoon. Shift foliar spray to the evening window and irrigate lightly near sunset.</span>
+                </div>
+              </div>
+              <div class="scene-right stack spacious">
+                <div class="weather-band">
+                  <div class="kpi-card">
+                    <strong>Weather signal</strong>
+                    <span>37C, dry winds</span>
+                  </div>
+                  <div class="kpi-card">
+                    <strong>Priority</strong>
+                    <span>Heat stress watch</span>
+                  </div>
+                  <div class="kpi-card">
+                    <strong>Trust status</strong>
+                    <span>Review path visible</span>
+                  </div>
+                </div>
+                <div class="info-card">
+                  <strong>Daily usefulness over feature count</strong>
+                  <span>The active flow keeps the most important action, signal, and trust note visible in one pass.</span>
+                </div>
+                <div class="info-card">
+                  <strong>Action, not just information</strong>
+                  <span>Weather is turned into a recommendation instead of being shown as an isolated number.</span>
+                </div>
+                <div class="info-card">
+                  <strong>Human review framing</strong>
+                  <span>Riskier advice remains connected to escalation and support instead of pretending full autonomy.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-5" class="clip scene" data-start="38" data-duration="10" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid">
+              <div class="scene-left">
+                <div class="section-label">Ask Kisan Alert</div>
+                <div class="title-lg">Voice-first asking keeps the barrier low.</div>
+                <div class="body-md">
+                  The asking flow should work for hands-busy, low-literacy, and field-side usage. That means asking is separate from answering, and the question itself is easy to understand.
+                </div>
+                <div class="stack" style="margin-top: 24px;">
+                  <div class="info-card">
+                    <strong>Voice, photo, typed fallback</strong>
+                    <span>The product can accept different forms of input, but the answer format stays short and focused.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="scene-right stack spacious">
+                <div class="question-card">
+                  <strong>Farmer question</strong>
+                  <span>"My groundnut leaves are curling after the hot wind. What should I do today?"</span>
+                </div>
+                <div class="info-card">
+                  <strong>Why split this scene</strong>
+                  <span>The viewer gets time to understand the user's question before the recommendation appears.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-6" class="clip scene" data-start="48" data-duration="10" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid">
+              <div class="scene-left">
+                <div class="section-label">Short Answer</div>
+                <div class="title-lg">The answer stays short enough to trust and act on.</div>
+                <div class="body-md">
+                  Instead of a long model paragraph, the product returns one recommendation and a few concrete next steps.
+                </div>
+              </div>
+              <div class="scene-right stack spacious">
+                <div class="answer-card">
+                  <strong>Give water support and wait until evening to spray.</strong>
+                  <p>Heat stress looks more likely than fresh pest pressure right now. Reduce afternoon stress first, then recheck leaf curl tomorrow morning.</p>
+                </div>
+                <div class="step-card">
+                  <strong>1. Light irrigation near sunset</strong>
+                  <span>Support the crop without adding stress at peak heat.</span>
+                </div>
+                <div class="step-card">
+                  <strong>2. Recheck 10 plants at sunrise</strong>
+                  <span>Look for fresh sucking-pest signs before escalating.</span>
+                </div>
+                <div class="step-card">
+                  <strong>3. Send a leaf photo if it spreads</strong>
+                  <span>Escalation remains visible instead of hidden.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-7" class="clip scene" data-start="58" data-duration="8" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid equal">
+              <div class="scene-left">
+                <div class="section-label">Alerts</div>
+                <div class="title-lg">Warnings stay short, local, and actionable.</div>
+                <div class="body-md">
+                  Alerts are useful only when the next step is obvious. The screen should help the farmer decide whether to monitor, wait, or escalate.
+                </div>
+              </div>
+              <div class="scene-right stack spacious">
+                <div class="alert-card">
+                  <strong>Red mite risk rising in nearby blocks</strong>
+                  <p>Scout lower leaves tomorrow morning. If 3 or more plants show spread, escalate through the support path before spraying.</p>
+                </div>
+                <div class="tabs">
+                  <div class="tab">Home</div>
+                  <div class="tab">Ask</div>
+                  <div class="tab active">Alerts</div>
+                  <div class="tab">Account</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-8" class="clip scene" data-start="66" data-duration="8" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid">
+              <div class="scene-left stack spacious">
+                <div>
+                  <div class="section-label">Account</div>
+                  <div class="title-lg">Settings stay understandable on a shared phone.</div>
+                  <div class="body-md">
+                    Language, voice, crop, district, and helper context remain visible because continuity matters as much as features do.
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <span>Language</span>
+                  <strong>English / Hindi / Telugu</strong>
+                </div>
+                <div class="settings-row">
+                  <span>Voice playback</span>
+                  <strong>On</strong>
+                </div>
+                <div class="settings-row">
+                  <span>Primary crop</span>
+                  <strong>Groundnut</strong>
+                </div>
+                <div class="settings-row">
+                  <span>Trusted helper</span>
+                  <strong>Village support line</strong>
+                </div>
+              </div>
+              <div class="scene-right close-block">
+                <div class="close-line">Home. Ask. Alerts. Account.</div>
+                <div class="close-copy">
+                  Kisan Alert keeps support, language, and daily guidance visible enough to work on shared phones in the field.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-9" class="clip scene" data-start="74" data-duration="8" data-track-index="2">
+          <div class="scene-card">
+            <div class="scene-grid equal">
+              <div class="scene-left">
+                <div class="section-label">Multilingual Support</div>
+                <div class="title-lg">Built for the languages farmers already use.</div>
+                <div class="body-md">
+                  Local-language access is part of the product foundation, so asking, listening, and understanding can happen with less friction.
+                </div>
+              </div>
+              <div class="scene-right">
+                <div class="language-cloud">
+                  <div class="language-chip accent">English</div>
+                  <div class="language-chip warm">हिन्दी</div>
+                  <div class="language-chip green">मराठी</div>
+                  <div class="language-chip accent">ಕನ್ನಡ</div>
+                  <div class="language-chip warm">తెలుగు</div>
+                  <div class="language-chip green">தமிழ்</div>
+                  <div class="language-chip accent">বাংলা</div>
+                  <div class="language-chip warm">ગુજરાતી</div>
+                  <div class="language-chip green">ਪੰਜਾਬੀ</div>
+                  <div class="language-chip accent">മലയാളം</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scene-10" class="clip scene" data-start="82" data-duration="6" data-track-index="2">
+          <div class="scene-card">
+            <div class="logo-stage">
+              <div class="logo-frame">
+                <img src="./assets/kisan-alert-logo.svg" alt="Kisan Alert logo" />
+              </div>
+              <div class="logo-name">Kisan Alert</div>
+              <div class="logo-tagline">
+                Short, local-language farming guidance for the moments that matter in the field.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      tl.from(".topbar", { opacity: 0, y: -18, duration: 0.8 }, 0);
+
+      const scenes = [
+        { id: "#scene-1", start: 0, end: 8 },
+        { id: "#scene-2", start: 8, end: 16 },
+        { id: "#scene-3", start: 16, end: 26 },
+        { id: "#scene-4", start: 26, end: 38 },
+        { id: "#scene-5", start: 38, end: 48 },
+        { id: "#scene-6", start: 48, end: 58 },
+        { id: "#scene-7", start: 58, end: 66 },
+        { id: "#scene-8", start: 66, end: 74 },
+        { id: "#scene-9", start: 74, end: 82 },
+        { id: "#scene-10", start: 82, end: 88 }
+      ];
+
+      scenes.forEach((scene) => {
+        tl.fromTo(scene.id, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.8 }, scene.start + 0.2);
+        tl.to(scene.id, { opacity: 0, y: -12, duration: 0.7 }, scene.end - 0.7);
+      });
+
+      tl.from("#scene-1 .hero-title, #scene-1 .body-lg, #scene-1 .hero-note", { opacity: 0, y: 24, duration: 0.7, stagger: 0.18 }, 0.7);
+
+      tl.from("#scene-2 .title-lg, #scene-2 .body-md", { opacity: 0, y: 22, duration: 0.7, stagger: 0.14 }, 8.9);
+      tl.from("#scene-2 .info-card", { opacity: 0, y: 16, duration: 0.6, stagger: 0.22 }, 10.2);
+
+      tl.from("#scene-3 .title-lg, #scene-3 .body-md, #scene-3 .persona-chip", { opacity: 0, y: 20, duration: 0.65, stagger: 0.14 }, 16.9);
+      tl.from("#scene-3 .info-card, #scene-3 .field-box, #scene-3 .status-pill", { opacity: 0, y: 16, duration: 0.55, stagger: 0.18 }, 18.4);
+
+      tl.from("#scene-4 .title-lg, #scene-4 .body-md", { opacity: 0, y: 20, duration: 0.65, stagger: 0.14 }, 26.9);
+      tl.from("#scene-4 .primary-alert", { opacity: 0, y: 18, duration: 0.65 }, 28.2);
+      tl.from("#scene-4 .kpi-card, #scene-4 .info-card", { opacity: 0, y: 16, duration: 0.55, stagger: 0.18 }, 29.5);
+
+      tl.from("#scene-5 .title-lg, #scene-5 .body-md, #scene-5 .info-card", { opacity: 0, y: 20, duration: 0.65, stagger: 0.18 }, 38.9);
+      tl.from("#scene-5 .question-card", { opacity: 0, y: 18, duration: 0.7 }, 40.6);
+
+      tl.from("#scene-6 .title-lg, #scene-6 .body-md", { opacity: 0, y: 20, duration: 0.65, stagger: 0.14 }, 48.9);
+      tl.from("#scene-6 .answer-card", { opacity: 0, y: 18, duration: 0.7 }, 50.4);
+      tl.from("#scene-6 .step-card", { opacity: 0, y: 16, duration: 0.55, stagger: 0.2 }, 51.6);
+
+      tl.from("#scene-7 .title-lg, #scene-7 .body-md", { opacity: 0, y: 20, duration: 0.65, stagger: 0.14 }, 58.9);
+      tl.from("#scene-7 .alert-card", { opacity: 0, y: 18, duration: 0.7 }, 60.3);
+      tl.from("#scene-7 .tab", { opacity: 0, y: 12, duration: 0.45, stagger: 0.1 }, 61.6);
+
+      tl.from("#scene-8 .title-lg, #scene-8 .body-md", { opacity: 0, y: 20, duration: 0.65, stagger: 0.14 }, 66.8);
+      tl.from("#scene-8 .settings-row", { opacity: 0, y: 14, duration: 0.5, stagger: 0.16 }, 68.2);
+      tl.from("#scene-8 .close-line, #scene-8 .close-copy", { opacity: 0, y: 18, duration: 0.65, stagger: 0.16 }, 70.2);
+
+      tl.from("#scene-9 .title-lg, #scene-9 .body-md", { opacity: 0, y: 20, duration: 0.65, stagger: 0.14 }, 74.8);
+      tl.from("#scene-9 .language-chip", { opacity: 0, y: 14, scale: 0.98, duration: 0.45, stagger: 0.08 }, 76.1);
+
+      tl.from("#scene-10 .logo-frame", { opacity: 0, scale: 0.94, duration: 0.7 }, 82.8);
+      tl.from("#scene-10 .logo-name, #scene-10 .logo-tagline", { opacity: 0, y: 18, duration: 0.65, stagger: 0.16 }, 83.4);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

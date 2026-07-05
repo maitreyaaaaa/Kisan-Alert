@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kisan Alert Pitch Deck</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --paper: #ffffff;
+        --ink: #1e2033;
+        --muted: #5e627c;
+        --line: rgba(30, 32, 51, 0.1);
+        --indigo: #1e2033;
+        --blue: #d5e2ff;
+        --orange: #f9730c;
+        --amber: #fff4df;
+        --green: #257a4b;
+        --green-soft: #dff4e7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top center, rgba(213, 226, 255, 0.95) 0%, rgba(213, 226, 255, 0.3) 18%, transparent 40%),
+          linear-gradient(180deg, #ffffff 0%, #f8f8fb 100%);
+        color: var(--ink);
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      .deck {
+        width: min(1280px, calc(100% - 32px));
+        margin: 32px auto 64px;
+        display: grid;
+        gap: 24px;
+      }
+
+      .slide {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        width: 100%;
+        min-height: 720px;
+        padding: 32px 36px 36px;
+        box-shadow: 0 18px 40px rgba(30, 32, 51, 0.06);
+        page-break-after: always;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      .slide-id {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .slide-id::before {
+        content: "";
+        width: 40px;
+        height: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--orange) 0%, #ffffff 55%, var(--green) 100%);
+      }
+
+      .status {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(30, 32, 51, 0.06);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      ul {
+        margin: 0;
+      }
+
+      h1,
+      h2 {
+        letter-spacing: -0.03em;
+      }
+
+      h1 {
+        font-size: 58px;
+        line-height: 1;
+        margin-bottom: 16px;
+      }
+
+      h2 {
+        font-size: 42px;
+        line-height: 1.04;
+        margin-bottom: 12px;
+      }
+
+      .subtitle,
+      .body {
+        color: var(--muted);
+      }
+
+      .subtitle {
+        font-size: 24px;
+        line-height: 1.35;
+        margin-bottom: 26px;
+      }
+
+      .body {
+        font-size: 20px;
+        line-height: 1.5;
+      }
+
+      .grid-2,
+      .grid-3 {
+        display: grid;
+        gap: 18px;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        padding: 22px 24px;
+        background: #ffffff;
+      }
+
+      .card.soft-blue {
+        background: rgba(213, 226, 255, 0.3);
+        border-color: rgba(106, 136, 226, 0.14);
+      }
+
+      .card.soft-amber {
+        background: var(--amber);
+        border-color: rgba(249, 115, 12, 0.18);
+      }
+
+      .card.soft-green {
+        background: var(--green-soft);
+        border-color: rgba(37, 122, 75, 0.16);
+      }
+
+      .card h3 {
+        font-size: 23px;
+        margin-bottom: 10px;
+      }
+
+      ul {
+        padding-left: 20px;
+        display: grid;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 19px;
+        line-height: 1.42;
+      }
+
+      .metric {
+        padding: 18px 20px;
+        border-radius: 20px;
+        background: rgba(30, 32, 51, 0.04);
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.35;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+      }
+
+      .flow-step {
+        padding: 14px 12px;
+        border-radius: 18px;
+        text-align: center;
+        border: 1px solid var(--line);
+        background: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .ia {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .ia-item {
+        padding: 18px 16px;
+        border-radius: 20px;
+        background: rgba(30, 32, 51, 0.05);
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .footnote {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .warning {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(249, 115, 12, 0.08);
+        color: var(--ink);
+        font-size: 17px;
+        line-height: 1.4;
+      }
+
+      .logo-lockup {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .logo-lockup img {
+        width: 82px;
+        height: 82px;
+      }
+
+      .closing {
+        display: grid;
+        place-items: center;
+        text-align: center;
+        min-height: 500px;
+      }
+
+      .closing h1 {
+        font-size: 64px;
+      }
+
+      .closing .subtitle {
+        max-width: 780px;
+      }
+
+      @media print {
+        @page {
+          size: 13.333in 7.5in;
+          margin: 0;
+        }
+
+        body {
+          background: #ffffff;
+        }
+
+        .deck {
+          width: 1280px;
+          margin: 0;
+          gap: 0;
+        }
+
+        .slide {
+          border-radius: 0;
+          width: 1280px;
+          min-height: 720px;
+          box-shadow: none;
+          break-after: page;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck">
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 1</div>
+          <div class="status">Hackathon Pitch Deck</div>
+        </div>
+        <div class="logo-lockup">
+          <img src="./kisan-alert-logo.svg" alt="Kisan Alert logo" />
+          <div>
+            <h1>Kisan Alert</h1>
+            <p class="subtitle">Voice-first crop guidance for farmers using shared phones in local languages.</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card soft-blue">
+            <h3>What We Are Building</h3>
+            <p class="body">A narrow farmer-assistance system that turns crop guidance into one clear next step at a time.</p>
+          </div>
+          <div class="card soft-green">
+            <h3>Core Product Flow</h3>
+            <div class="ia">
+              <div class="ia-item">Home</div>
+              <div class="ia-item">Ask</div>
+              <div class="ia-item">Alerts</div>
+              <div class="ia-item">Account</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 2</div>
+          <div class="status">Problem</div>
+        </div>
+        <h2>Farm advice is available, but not always accessible when it matters.</h2>
+        <p class="subtitle">Farmers need timely, local, understandable guidance. Existing access is often fragmented, text-heavy, or dependent on limited human reach.</p>
+        <div class="grid-3">
+          <div class="metric">
+            <strong>1:650</strong>
+            <span>India's extension agent-to-farmer ratio cited in the Digital Green case study.</span>
+          </div>
+          <div class="metric">
+            <strong>Low-literacy barrier</strong>
+            <span>Voice and simpler interfaces matter for many new internet users.</span>
+          </div>
+          <div class="metric">
+            <strong>Shared-device reality</strong>
+            <span>Rural usage often happens on family phones, not personal always-on devices.</span>
+          </div>
+        </div>
+        <p class="footnote">Research basis includes Google on voice-first internet use and the Digital Green case study on extension capacity.</p>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 3</div>
+          <div class="status">Why Existing UX Breaks</div>
+        </div>
+        <h2>Generic chat interfaces do not fit real farmer usage.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <ul>
+              <li>Google states voice is critical for many new internet users with low literacy.</li>
+              <li>Typing in scripted languages can add friction where speaking is easier.</li>
+              <li>Long answers are harder to trust and act on in the field.</li>
+            </ul>
+          </div>
+          <div class="card soft-amber">
+            <ul>
+              <li>CGAP notes women often face lower traditional or digital literacy and lower smartphone/mobile internet access.</li>
+              <li>Voice, pictures, and local-language interaction reduce digital-literacy barriers.</li>
+              <li>Trust and usability matter as much as raw model capability.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 4</div>
+          <div class="status">Solution</div>
+        </div>
+        <h2>Kisan Alert reduces the product to four farmer-safe surfaces.</h2>
+        <p class="subtitle">Instead of a dense agriculture super-app, the product focuses on a few tasks it can do clearly.</p>
+        <div class="grid-2">
+          <div class="card">
+            <div class="ia">
+              <div class="ia-item">Home</div>
+              <div class="ia-item">Ask</div>
+              <div class="ia-item">Alerts</div>
+              <div class="ia-item">Account</div>
+            </div>
+          </div>
+          <div class="card">
+            <ul>
+              <li><strong>Home:</strong> district-aware daily actions</li>
+              <li><strong>Ask:</strong> voice, photo, or typed query</li>
+              <li><strong>Alerts:</strong> short local warnings and next steps</li>
+              <li><strong>Account:</strong> language, crop, district, voice, helper</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 5</div>
+          <div class="status">Who It Serves</div>
+        </div>
+        <h2>Designed for farmers in tier 2 and tier 3 India.</h2>
+        <div class="grid-2">
+          <div class="card soft-green">
+            <ul>
+              <li>Partial or inconsistent literacy is possible.</li>
+              <li>Screen use may happen outdoors in daylight.</li>
+              <li>The device may be shared with family members.</li>
+              <li>Short, local-language guidance builds confidence faster than long text.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Design Consequences</h3>
+            <ul>
+              <li>Voice-first interaction</li>
+              <li>One answer card, not raw model output</li>
+              <li>Visible helper and escalation path</li>
+              <li>Simple settings, high-contrast visuals</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 6</div>
+          <div class="status">How The AI Works</div>
+        </div>
+        <h2>AI is used as a constrained advisory layer, not a free-form chatbot.</h2>
+        <div class="flow">
+          <div class="flow-step">Voice / Image / Text</div>
+          <div class="flow-step">Query Interpretation</div>
+          <div class="flow-step">Retrieve Approved Context</div>
+          <div class="flow-step">Generate Structured Output</div>
+          <div class="flow-step">Render Short Answer Card</div>
+          <div class="flow-step">Human Review If Needed</div>
+        </div>
+        <div class="grid-2" style="margin-top: 24px;">
+          <div class="card">
+            <h3>Output Contract</h3>
+            <ul>
+              <li><code>summary</code></li>
+              <li><code>actions</code></li>
+              <li><code>risk</code></li>
+              <li><code>confidence</code></li>
+              <li><code>needsHumanReview</code></li>
+            </ul>
+          </div>
+          <div class="card soft-blue">
+            <h3>Current Prototype Path</h3>
+            <ul>
+              <li>Android prototype currently uses Gemini for advisory flows.</li>
+              <li>Production target moves model access server-side.</li>
+              <li>The client should only render farmer-safe structured outputs.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 7</div>
+          <div class="status">Safety And Trust</div>
+        </div>
+        <h2>This is not an unconstrained AI chatbot.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <ul>
+              <li>Constrained JSON answer schema</li>
+              <li>Short summary plus 1 to 3 next steps</li>
+              <li>Human-review framing for lower-confidence advice</li>
+              <li>Planned audit and safety logging service</li>
+            </ul>
+          </div>
+          <div class="card soft-amber">
+            <ul>
+              <li>Digital Green's production pattern uses validated knowledge sources.</li>
+              <li>Their early rollout added a human review stage by assisting extension agents instead of replacing them.</li>
+              <li>Kisan Alert follows the same trust direction: assist, constrain, escalate.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 8</div>
+          <div class="status">Why It Can Deploy</div>
+        </div>
+        <h2>Deployability comes from narrow scope and clear service boundaries.</h2>
+        <div class="grid-3">
+          <div class="card">
+            <h3>Narrow Workflow</h3>
+            <p class="body">Phone-first sign-in, Home, Ask, Alerts, and Account are realistic pilot surfaces.</p>
+          </div>
+          <div class="card">
+            <h3>Backend Separation</h3>
+            <p class="body">Auth, profile, advisory, content, alerts, and audit services are already defined in the target architecture.</p>
+          </div>
+          <div class="card">
+            <h3>Geography Fit</h3>
+            <p class="body">District-aware content and local alerts make the product suitable for pilot deployment in a real administrative context.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 9</div>
+          <div class="status">Current Prototype Evidence</div>
+        </div>
+        <h2>There is already a demoable product surface.</h2>
+        <div class="grid-2">
+          <div class="card soft-blue">
+            <ul>
+              <li>Android prototype exists in the repo.</li>
+              <li>Farmer-facing web companion exists in the repo.</li>
+              <li>Demoable flows include sign-in, Home, Ask, Alerts, and Account.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <ul>
+              <li>Language-first, shared-device-safe UX is already reflected in the current direction.</li>
+              <li>Voice-first Ask and one-answer-card rendering are already part of the prototype scope.</li>
+              <li>District-aware actions and alerts are already part of the current product framing.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="warning">
+          Prototype status: the current build demonstrates the core farmer journey, while production backend services and scaled deployment integrations are the next step.
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 10</div>
+          <div class="status">Technology Stack</div>
+        </div>
+        <h2>Prototype now, service-backed production next.</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Current Prototype</h3>
+            <ul>
+              <li>Kotlin</li>
+              <li>Jetpack Compose</li>
+              <li>Android</li>
+              <li>HTML / CSS / JavaScript web companion</li>
+              <li>Google Gemini prototype integration</li>
+            </ul>
+          </div>
+          <div class="card soft-green">
+            <h3>Production Direction</h3>
+            <ul>
+              <li>Server-side OTP auth</li>
+              <li>Server-side advisory APIs</li>
+              <li>Retrieval over approved agronomy content</li>
+              <li>Constrained JSON contracts</li>
+              <li>Audit logging and review routing</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 11</div>
+          <div class="status">Pilot Rollout Vision</div>
+        </div>
+        <h2>Start with one district and a narrow advisory loop.</h2>
+        <div class="grid-2">
+          <div class="card soft-amber">
+            <ul>
+              <li>One district pilot</li>
+              <li>One or two primary crops</li>
+              <li>Voice-first onboarding</li>
+              <li>Daily actions + Ask + alerts</li>
+              <li>Trusted escalation path</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What We Would Measure</h3>
+            <ul>
+              <li>Farmer comprehension of recommendations</li>
+              <li>Repeat usage</li>
+              <li>Action completion</li>
+              <li>Reduction in ambiguous advisory output</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="topbar">
+          <div class="slide-id">Slide 12</div>
+          <div class="status">Closing</div>
+        </div>
+        <div class="closing">
+          <div>
+            <div class="logo-lockup" style="justify-content: center;">
+              <img src="./kisan-alert-logo.svg" alt="Kisan Alert logo" />
+            </div>
+            <h1>Kisan Alert</h1>
+            <p class="subtitle">Short, local-language farming guidance for moments that matter in the field.</p>
+            <p class="body">Pilot this where language, trust, and timely action matter more than feature count.</p>
+            <p class="footnote">Built for practical deployment: narrow scope, local language support, and safer advisory flows.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

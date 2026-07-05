@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -44,11 +45,17 @@ fun KisanHeader(
   onLanguageSelected: (AppLanguage) -> Unit
 ) {
   var showLangDropdown by remember { mutableStateOf(false) }
+  val card = Color(0xFFFFFBF5)
+  val border = Color(0xFFE3DDD1)
+  val brandInk = Color(0xFF1F2A44)
+  val brandBlue = Color(0xFF2D4F8F)
+  val muted = Color(0xFF6F7A8C)
+  val warmAccent = Color(0xFFF28C38)
 
   Column(
     modifier = Modifier
       .fillMaxWidth()
-      .background(Color(0xFF1E293B)) // Slate card
+      .background(card)
       .padding(horizontal = 16.dp, vertical = 12.dp)
   ) {
     Row(
@@ -57,18 +64,17 @@ fun KisanHeader(
       verticalAlignment = Alignment.CenterVertically
     ) {
       Row(verticalAlignment = Alignment.CenterVertically) {
-        // High-contrast leafy icon representing agriculture and safety
         Box(
           modifier = Modifier
             .size(36.dp)
-            .background(Color(0xFF1B4332), shape = CircleShape) // forest green
-            .border(2.dp, Color(0xFF52B788), shape = CircleShape), // soft mint
+            .background(Color(0xFFE9EEF8), shape = CircleShape)
+            .border(1.dp, border, shape = CircleShape),
           contentAlignment = Alignment.Center
         ) {
           Icon(
             imageVector = Icons.Default.Agriculture,
-            contentDescription = "App Leaf Logo",
-            tint = Color(0xFF52B788),
+            contentDescription = "App logo",
+            tint = brandBlue,
             modifier = Modifier.size(20.dp)
           )
         }
@@ -76,29 +82,26 @@ fun KisanHeader(
         Column {
           Text(
             text = LocalizedStrings.get("app_name", selectedLanguage),
-            color = Color.White,
-            fontSize = 22.sp,
+            color = brandInk,
+            fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
             modifier = Modifier.testTag("app_title")
           )
           Text(
             text = LocalizedStrings.get("tagline", selectedLanguage),
-            color = Color(0xFF94A3B8),
+            color = muted,
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium
           )
         }
       }
 
-      // Indicator language selector button (high touch readability)
       Box {
         OutlinedButton(
           onClick = { showLangDropdown = true },
           contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-          colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color(0xFF52B788)
-          ),
-          border = borderStrokeForReadability(),
+          colors = ButtonDefaults.outlinedButtonColors(contentColor = brandInk),
+          border = BorderStroke(1.dp, border),
           modifier = Modifier.testTag("language_selector")
         ) {
           Icon(Icons.Default.Language, contentDescription = "Language", modifier = Modifier.size(16.dp))
@@ -114,14 +117,14 @@ fun KisanHeader(
         DropdownMenu(
           expanded = showLangDropdown,
           onDismissRequest = { showLangDropdown = false },
-          modifier = Modifier.background(Color(0xFF1E293B))
+          modifier = Modifier.background(card)
         ) {
           AppLanguage.values().forEach { language ->
             DropdownMenuItem(
               text = {
                 Text(
                   text = language.nativeName,
-                  color = if (language == selectedLanguage) Color(0xFF52B788) else Color.White,
+                  color = if (language == selectedLanguage) warmAccent else brandInk,
                   fontWeight = if (language == selectedLanguage) FontWeight.Bold else FontWeight.Normal,
                   fontSize = 14.sp
                 )

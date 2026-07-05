@@ -187,7 +187,7 @@ fun CropHealthLoggerScreen(viewModel: KisanAlertViewModel, scope: CoroutineScope
                 .border(1.dp, Color(0xFF334155), shape = RoundedCornerShape(10.dp))
                 .clickable {
                   viewModel.simulatedImageName = sample.second
-                  viewModel.runCropLeafDiagnosis(sample.second, context)
+                  viewModel.simulateUploadLeaf(sample.second, context, scope)
                 }
                 .padding(8.dp),
               contentAlignment = Alignment.Center

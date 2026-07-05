@@ -1,5 +1,6 @@
 package com.example.viewmodel
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -10,15 +11,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.data.model.AlertItem
+import com.example.data.model.AdvisoryCard
+import com.example.data.model.FarmerProfile
 import com.example.data.model.HealthReport
 import com.example.data.model.HistoryLog
+import com.example.data.model.HomePriority
+import com.example.data.model.HomeSummary
 import com.example.data.model.SoilAdvisory
+import com.example.data.model.SoilAdvisoryRequest
+import com.example.data.service.AdvisoryGateway
+import com.example.data.service.AdvisoryGatewayFactory
+import com.example.data.service.AuthGateway
+import com.example.data.service.AuthGatewayFactory
+import com.example.data.service.LocalSessionStore
 import com.example.util.AppLanguage
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.generationConfig
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.example.util.LocalizedStrings
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.CoroutineScope
@@ -33,14 +40,15 @@ class KisanAlertViewModel : ViewModel() {
   var currentLanguage by mutableStateOf(AppLanguage.ENGLISH)
 
   // Auth State
-  var isLoggedIn by mutableStateOf(false)
-  var userPhoneNumber by mutableStateOf("")
+  var farmerProfile by mutableStateOf<FarmerProfile?>(null)
   var isAuthLoading by mutableStateOf(false)
   var authErrorMessage by mutableStateOf<String?>(null)
+  val isLoggedIn: Boolean
+    get() = farmerProfile != null
 
   // Settings State
   var isAutoSpeakEnabled by mutableStateOf(true)
-  var isDarkTheme by mutableStateOf(true)
+  var isDarkTheme by mutableStateOf(false)
 
 
   // Soil Advisor Inputs
@@ -57,64 +65,73 @@ class KisanAlertViewModel : ViewModel() {
   // Crop Health Logger State
   var isDiagnosticLoading by mutableStateOf(false)
   var diagnosticReport by mutableStateOf<HealthReport?>(null)
+  var voiceAdvisoryCard by mutableStateOf<AdvisoryCard?>(null)
   var simulatedImageName by mutableStateOf<String?>(null)
   var isRecordingVoice by mutableStateOf(false)
   var recordedQueryText by mutableStateOf<String?>(null)
 
-  // Moshi & Gemini SDK Config
-  private val moshi = Moshi.Builder()
-    .addLast(KotlinJsonAdapterFactory())
-    .build()
-
-  private val generativeModel by lazy {
-    GenerativeModel(
-      modelName = "gemini-2.5-flash",
-      apiKey = com.example.BuildConfig.GEMINI_API_KEY,
-      generationConfig = generationConfig {
-        responseMimeType = "application/json"
-      }
-    )
-  }
+  // Advisory boundary for prototype vs production-ready service routing.
+  private val advisoryGateway: AdvisoryGateway =
+    AdvisoryGatewayFactory.create(com.example.BuildConfig.GEMINI_API_KEY)
+  private val authGateway: AuthGateway = AuthGatewayFactory.create()
+  private var sessionStore: LocalSessionStore? = null
 
   init {
-    // Demonstration of secure API Key retrieval from Secrets panel via BuildConfig.
-    // In production apps utilizing Vertex AI for Firebase, backend authentication is preferred,
-    // but the API key is retrieved here for local prototyping verification.
     val apiKey = com.example.BuildConfig.GEMINI_API_KEY
     if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
-      android.util.Log.w("KisanAlertViewModel", "Secure GEMINI_API_KEY from BuildConfig is not configured yet.")
+      android.util.Log.w(
+        "KisanAlertViewModel",
+        "Prototype advisory gateway is running in ${advisoryGateway.modeLabel} mode."
+      )
     } else {
-      android.util.Log.i("KisanAlertViewModel", "Successfully retrieved secure GEMINI_API_KEY from BuildConfig.")
+      android.util.Log.i(
+        "KisanAlertViewModel",
+        "Prototype advisory gateway is running in ${advisoryGateway.modeLabel} mode."
+      )
     }
   }
 
   // Alerts & History Lists
-  val alertList = listOf(
+  /* legacy val alertList = listOf(
     AlertItem(
       1,
-      "Dry-spell warning dispatched via Voice Call",
-      "Regional IVR system broadcast to all registered smallholders in block.",
-      "VOICE",
-      "10 mins ago",
-      "IVR Broadcast Script: 'Alert! Low rainfall forecast for next 14 days in your village. Prepare drip channels and conserve ground water. Tap 1 to repeat.'"
+      "Heavy rain likely tomorrow evening",
+      "Keep harvested crop covered and check drainage before sunset.",
+      "WEATHER",
+      "20 mins ago",
+      "Rainfall is expected in your area tomorrow evening. Move harvested crop under cover, clear drainage channels, and delay spraying if possible."
     ),
     AlertItem(
       2,
-      "Pest Outbreak: Fall Armyworm detected",
-      "Preemptive SMS advice sent to fields in 5km radius.",
-      "SMS",
+      "Leaf spot risk after two wet mornings",
+      "Walk the field early and use the camera flow if new spots appear.",
+      "CROP",
       "2 hours ago",
-      "SMS Broadcast: 'RSK ALERT: Fall Armyworm pest detected in neighboring cotton fields. Check leaf undersides for white egg sacks. Spray Neem oil immediately.'"
+      "Nearby fields reported fresh leaf spots after repeated moisture. Inspect the lower leaves in the morning and capture a photo if symptoms spread."
     ),
     AlertItem(
       3,
-      "Market Price Alert: Wheat Price Up",
-      "Mandiga update sent to farmers.",
-      "SMS",
+      "Tomato mandi price up by Rs 2 per kg",
+      "Small price movement today. Check transport cost before selling.",
+      "MARKET",
       "Yesterday",
       "SMS Broadcast: 'Mandiga Market Price update: Wheat price increased by ₹50 to ₹2,450 per quintal. Demand remains strong.'"
     )
-  )
+  ) */
+
+  val alertList: List<AlertItem>
+    get() = buildAlertList()
+
+  val homeSummary: HomeSummary
+    get() = buildHomeSummary()
+
+  val currentAskCard: AdvisoryCard?
+    get() = when {
+      voiceAdvisoryCard != null -> voiceAdvisoryCard
+      diagnosticReport != null -> buildHealthAdvisoryCard(diagnosticReport!!, currentLanguage)
+      advisoryResult != null -> buildSoilAdvisoryCard(advisoryResult!!, currentLanguage)
+      else -> null
+    }
 
   val historyLogs = listOf(
     HistoryLog(
@@ -151,6 +168,150 @@ class KisanAlertViewModel : ViewModel() {
     )
   )
 
+  private fun buildHomeSummary(): HomeSummary {
+    val profile = farmerProfile
+    val district = profile?.district ?: "your district"
+    val crop = profile?.primaryCrop ?: "Millet"
+    val name = profile?.name ?: "Farmer"
+
+    return HomeSummary(
+      headline = if (profile != null) {
+        LocalizedStrings.format("home_signed_in_title", currentLanguage, mapOf("name" to name))
+      } else {
+        LocalizedStrings.get("home_headline", currentLanguage)
+      },
+      intro = if (profile != null) {
+        LocalizedStrings.format(
+          "home_signed_in_copy",
+          currentLanguage,
+          mapOf(
+            "district" to district,
+            "crop" to crop
+          )
+        )
+      } else {
+        LocalizedStrings.get("home_intro", currentLanguage)
+      },
+      districtTag = district,
+      cropTag = crop,
+      weatherValue = when (district.lowercase()) {
+        "anantapur" -> LocalizedStrings.get("home_weather_anantapur", currentLanguage)
+        "guntur" -> LocalizedStrings.get("home_weather_guntur", currentLanguage)
+        "nizamabad" -> LocalizedStrings.get("home_weather_nizamabad", currentLanguage)
+        "mysuru" -> LocalizedStrings.get("home_weather_mysuru", currentLanguage)
+        else -> LocalizedStrings.get("home_weather_default", currentLanguage)
+      },
+      topAlertTitle = alertList.firstOrNull()?.title ?: "No active alerts",
+      supportCopy = LocalizedStrings.format(
+        "home_support_copy",
+        currentLanguage,
+        mapOf("helper" to (profile?.trustedHelperPhone ?: "+91 90000 11223"))
+      ),
+      priorities = listOf(
+        HomePriority(
+          title = LocalizedStrings.format(
+            "home_priority_patch_title",
+            currentLanguage,
+            mapOf("crop" to crop.lowercase())
+          ),
+          detail = LocalizedStrings.get("home_priority_patch_detail", currentLanguage)
+        ),
+        HomePriority(
+          title = LocalizedStrings.get("home_priority_voice_title", currentLanguage),
+          detail = LocalizedStrings.get("home_priority_voice_detail", currentLanguage)
+        ),
+        HomePriority(
+          title = LocalizedStrings.format(
+            "home_priority_market_title",
+            currentLanguage,
+            mapOf("district" to district)
+          ),
+          detail = LocalizedStrings.get("home_priority_market_detail", currentLanguage)
+        )
+      )
+    )
+  }
+
+  private fun buildAlertList(): List<AlertItem> {
+    val district = farmerProfile?.district ?: "your district"
+    val crop = farmerProfile?.primaryCrop ?: "Millet"
+
+    return listOf(
+      AlertItem(
+        1,
+        "Heavy rain likely in $district tonight",
+        "Keep harvested crop covered and clear the nearest drain before sunset.",
+        "WEATHER",
+        "20 mins ago",
+        "Weather risk is highest in the next 8 hours. Move harvested produce off the floor, reopen blocked drainage, and delay spraying if leaf wetness remains high."
+      ),
+      AlertItem(
+        2,
+        "$crop disease risk rising in wet pockets",
+        "Walk the shadiest side of the field and inspect lower leaves before treatment.",
+        "CROP",
+        "2 hours ago",
+        "Repeated moisture can make early disease spread look like a nutrient issue. Inspect two affected plants and compare them with a healthy patch before spending on inputs."
+      ),
+      AlertItem(
+        3,
+        "$district mandi signal improving for $crop",
+        "Watch transport cost before sending the next small lot.",
+        "MARKET",
+        "Yesterday",
+        "Market movement is positive, but not urgent. Confirm the evening rate and compare it with loading and travel cost before making a sale decision."
+      )
+    )
+  }
+
+  private fun buildHealthAdvisoryCard(report: HealthReport, language: AppLanguage): AdvisoryCard {
+    val severityPercent = (report.severityPercent * 100).toInt()
+    val riskLabel = when {
+      report.severityPercent >= 0.6f -> LocalizedStrings.get("ask_risk_high", language)
+      report.severityPercent >= 0.25f -> LocalizedStrings.get("ask_risk_medium", language)
+      else -> LocalizedStrings.get("ask_risk_low", language)
+    }
+    val needsHumanReview = report.severityPercent >= 0.25f
+    val confidenceLabel = if (report.imageType == "HEALTHY") {
+      LocalizedStrings.get("ask_confidence_early", language)
+    } else {
+      LocalizedStrings.get("ask_confidence_pattern", language)
+    }
+
+    return AdvisoryCard(
+      title = report.diseaseName,
+      summary = if (report.imageType == "HEALTHY") {
+        LocalizedStrings.get("ask_summary_healthy", language)
+      } else {
+        LocalizedStrings.get("ask_summary_detected", language)
+          .replace("{risk}", riskLabel)
+          .replace("{percent}", severityPercent.toString())
+      },
+      actions = report.remediesList,
+      riskLabel = riskLabel,
+      needsHumanReview = needsHumanReview,
+      confidenceLabel = confidenceLabel
+    )
+  }
+
+  private fun buildSoilAdvisoryCard(advisory: SoilAdvisory, language: AppLanguage): AdvisoryCard {
+    val needsHumanReview = true
+    val confidenceLabel = if (advisory.matchPercentage.contains("Prototype", ignoreCase = true)) {
+      LocalizedStrings.get("ask_confidence_prototype", language)
+    } else {
+      LocalizedStrings.get("ask_confidence_soil_fit", language)
+    }
+
+    return AdvisoryCard(
+      title = advisory.cropName,
+      summary = advisory.details,
+      actions = advisory.guidelines,
+      riskLabel = LocalizedStrings.get("ask_risk_plan", language),
+      needsHumanReview = needsHumanReview,
+      confidenceLabel = confidenceLabel
+    )
+  }
+
   /**
    * 1. runSoilAdvisory: Construct a prompt and query Gemini model for a JSON output.
    */
@@ -167,38 +328,25 @@ class KisanAlertViewModel : ViewModel() {
       withContext(Dispatchers.Main) {
         isAdvisoryLoading = true
         advisoryResult = null
+        diagnosticReport = null
+        voiceAdvisoryCard = null
       }
       try {
-        val prompt = """
-          You are an expert agronomist. Analyze the following soil and environmental conditions and recommend the most suitable crop:
-          - Soil Type: $soilType
-          - Nitrogen (N): $N ppm
-          - Phosphorus (P): $P ppm
-          - Potassium (K): $K ppm
-          - Soil pH: $pH
-          - Current/Forecasted Weather: $weather
-          
-          Return a JSON object matching this schema:
-          {
-            "cropName": "Name of the crop recommended",
-            "matchPercentage": "Match percentage (e.g., '95% Match')",
-            "plantingWindow": "Sowing window (e.g., 'Next 10 Days')",
-            "details": "A detailed explanation of why this crop fits these parameters",
-            "guidelines": ["Guideline 1", "Guideline 2", "Guideline 3"]
-          }
-          
-          Ensure the response contains ONLY the valid raw JSON object. Do not wrap it in markdown code blocks or add any other text.
-        """.trimIndent()
-        
-        val response = generativeModel.generateContent(prompt)
-        val responseText = response.text?.trim() ?: throw Exception("Empty response from Gemini")
-        val cleanJson = extractJsonBlock(responseText)
-        val advisory = moshi.adapter(SoilAdvisory::class.java).fromJson(cleanJson)
+        val advisory = advisoryGateway.requestSoilAdvisory(
+          SoilAdvisoryRequest(
+            soilType = soilType,
+            nitrogen = N,
+            phosphorus = P,
+            potassium = K,
+            phLevel = pH,
+            weather = weather
+          )
+        )
         
         withContext(Dispatchers.Main) {
           advisoryResult = advisory
-          if (isAutoSpeakEnabled && advisory != null) {
-            speakSoilAdvisory(advisory)
+          if (isAutoSpeakEnabled) {
+            speakAdvisoryCard(buildSoilAdvisoryCard(advisory, currentLanguage))
           }
         }
       } catch (e: Exception) {
@@ -207,12 +355,12 @@ class KisanAlertViewModel : ViewModel() {
           advisoryResult = SoilAdvisory(
             cropName = "Offline Recommendations (Error: ${e.localizedMessage ?: "Empty API response"})",
             matchPercentage = "Fallback Mode",
-            plantingWindow = "Verify Credentials",
-            details = "Unable to contact the Google Gemini API. Please make sure that your GEMINI_API_KEY is entered in the Secrets panel of Google AI Studio and that your device has active internet access.",
+            plantingWindow = "Review Service Setup",
+            details = "The prototype advisory flow could not complete. Production should move this path to a server-side advisory service instead of relying on client-side model access.",
             guidelines = listOf(
-              "Add GEMINI_API_KEY in Google AI Studio secrets.",
-              "Verify Internet access on the device/emulator.",
-              "Ensure correct model name configuration."
+              "Keep this app usable with local fallbacks while backend work is in progress.",
+              "Move model access behind an approved server-side agronomy service.",
+              "Verify connectivity and prototype configuration only for local testing."
             )
           )
         }
@@ -232,52 +380,29 @@ class KisanAlertViewModel : ViewModel() {
     scope.launch(Dispatchers.IO) {
       withContext(Dispatchers.Main) {
         isDiagnosticLoading = true
+        advisoryResult = null
         diagnosticReport = null
+        voiceAdvisoryCard = null
       }
       try {
-        val bitmap = android.graphics.BitmapFactory.decodeFile(imageFile.absolutePath)
-          ?: throw Exception("Failed to decode image file")
-          
-        val promptText = """
-          Analyze this crop leaf image. Identify any disease, assess the severity, and recommend organic/chemical remedies.
-          
-          Return a JSON object matching this schema:
-          {
-            "diseaseName": "The detected disease or 'Healthy Leaf'",
-            "severityPercent": 0.0, // a float representing severity between 0.0 (healthy) and 1.0 (extremely severe)
-            "remediesList": ["Remedy 1", "Remedy 2", "Remedy 3"],
-            "imageType": "HEALTHY" or "BLAST" or "BLIGHT" // select the closest match based on visual symptoms
-          }
-          
-          Ensure the response contains ONLY the valid raw JSON object. Do not wrap it in markdown code blocks or add any other text.
-        """.trimIndent()
-        
-        val response = generativeModel.generateContent(
-          content {
-            image(bitmap)
-            text(promptText)
-          }
-        )
-        val responseText = response.text?.trim() ?: throw Exception("Empty response from Gemini")
-        val cleanJson = extractJsonBlock(responseText)
-        val report = moshi.adapter(HealthReport::class.java).fromJson(cleanJson)
+        val report = advisoryGateway.requestCropDiagnosis(imageFile)
         
         withContext(Dispatchers.Main) {
           diagnosticReport = report
-          if (isAutoSpeakEnabled && report != null) {
-            speakCurrentAdvisory(report)
+          if (isAutoSpeakEnabled) {
+            speakAdvisoryCard(buildHealthAdvisoryCard(report, currentLanguage))
           }
         }
       } catch (e: Exception) {
         e.printStackTrace()
         withContext(Dispatchers.Main) {
           diagnosticReport = HealthReport(
-            diseaseName = "Error: ${e.localizedMessage ?: "Failed to contact Gemini"}",
+            diseaseName = "Prototype advisory error: ${e.localizedMessage ?: "Service unavailable"}",
             severityPercent = 0.0f,
             remediesList = listOf(
-              "Please check that your GEMINI_API_KEY is configured in the AI Studio Secrets panel.",
-              "Ensure your device has active internet connectivity.",
-              "If the problem persists, verify the model name and network configurations."
+              "Treat this as a prototype limitation, not a final production path.",
+              "Use image-free local fallback guidance until the backend advisory service exists.",
+              "Move crop diagnosis to a server-side service before production release."
             ),
             imageType = "HEALTHY"
           )
@@ -300,6 +425,8 @@ class KisanAlertViewModel : ViewModel() {
     scope: CoroutineScope? = null
   ) {
     simulatedImageName = type
+    advisoryResult = null
+    voiceAdvisoryCard = null
     if (context != null && scope != null) {
       scope.launch(Dispatchers.IO) {
         try {
@@ -365,51 +492,37 @@ class KisanAlertViewModel : ViewModel() {
         recordedQueryText = queryText
         isDiagnosticLoading = true
         diagnosticReport = null
+        advisoryResult = null
+        voiceAdvisoryCard = null
       }
       
       try {
-        val prompt = """
-          Answer the following farmer spoken query:
-          "$queryText"
-          
-          Return a JSON object matching this schema:
-          {
-            "diseaseName": "Spoken Query: $queryText",
-            "severityPercent": 0.25,
-            "remediesList": ["Remedy 1", "Remedy 2", "Remedy 3"],
-            "imageType": "HEALTHY"
-          }
-          
-          Ensure the response contains ONLY the valid raw JSON object. Do not wrap it in markdown code blocks or add any other text.
-        """.trimIndent()
-        
-        val response = generativeModel.generateContent(prompt)
-        val responseText = response.text?.trim() ?: throw Exception("Empty response from Gemini")
-        val cleanJson = extractJsonBlock(responseText)
-        val report = moshi.adapter(HealthReport::class.java).fromJson(cleanJson)
+        val card = advisoryGateway.requestVoiceAdvisory(queryText)
         
         withContext(Dispatchers.Main) {
-          diagnosticReport = report
-          if (isAutoSpeakEnabled && report != null) {
-            speakCurrentAdvisory(report)
+          voiceAdvisoryCard = card
+          if (isAutoSpeakEnabled) {
+            speakAdvisoryCard(card)
           }
         }
       } catch (e: Exception) {
         e.printStackTrace()
         withContext(Dispatchers.Main) {
-          val fallbackReport = HealthReport(
-            diseaseName = "Voice Advisory: $queryText",
-            severityPercent = 0.20f,
-            remediesList = listOf(
+          val fallbackCard = AdvisoryCard(
+            title = "Next step for your question",
+            summary = "Start with one local field check before spending money on treatment or fertilizer for: $queryText",
+            actions = listOf(
               "Keep field moisture monitored.",
               "Consult local extension officer if symptoms spread.",
               "Apply organic bio-pesticides or compost to boost immunity."
             ),
-            imageType = "HEALTHY"
+            riskLabel = LocalizedStrings.get("ask_risk_plan", currentLanguage),
+            needsHumanReview = true,
+            confidenceLabel = LocalizedStrings.get("ask_confidence_prototype", currentLanguage)
           )
-          diagnosticReport = fallbackReport
+          voiceAdvisoryCard = fallbackCard
           if (isAutoSpeakEnabled) {
-            speakCurrentAdvisory(fallbackReport)
+            speakAdvisoryCard(fallbackCard)
           }
         }
       } finally {
@@ -421,24 +534,25 @@ class KisanAlertViewModel : ViewModel() {
   }
 
   fun speakCurrentAdvisory(report: HealthReport) {
-    val textToSpeak = buildString {
-      append("Detected issue is ${report.diseaseName}. ")
-      append("Recommended action plan contains: ")
-      report.remediesList.forEachIndexed { index, remedy ->
-        append("Action ${index + 1}: $remedy. ")
-      }
-    }
-    onSpeakText?.invoke(textToSpeak)
+    speakAdvisoryCard(buildHealthAdvisoryCard(report, currentLanguage))
   }
 
   fun speakSoilAdvisory(advisory: SoilAdvisory) {
+    speakAdvisoryCard(buildSoilAdvisoryCard(advisory, currentLanguage))
+  }
+
+  fun speakAdvisoryCard(card: AdvisoryCard) {
     val textToSpeak = buildString {
-      append("Recommended crop is ${advisory.cropName} with ${advisory.matchPercentage}. ")
-      append("Planting window is ${advisory.plantingWindow}. ")
-      append("Details: ${advisory.details}. ")
-      append("Guidelines include: ")
-      advisory.guidelines.forEachIndexed { index, guideline ->
-        append("Guideline ${index + 1}: $guideline. ")
+      append(LocalizedStrings.get("tts_answer_intro", currentLanguage))
+      append(" ")
+      append(card.title)
+      append(". ")
+      append(card.summary)
+      append(" ")
+      append(LocalizedStrings.get("tts_actions_intro", currentLanguage))
+      append(" ")
+      card.actions.forEachIndexed { index, action ->
+        append("Action ${index + 1}: $action. ")
       }
     }
     onSpeakText?.invoke(textToSpeak)
@@ -465,29 +579,111 @@ class KisanAlertViewModel : ViewModel() {
   }
 
   fun verifyPhoneAndLogin(phone: String, otp: String, scope: CoroutineScope) {
+    verifyPhoneAndLogin(
+      phone = phone,
+      otp = otp,
+      farmerName = "Farmer",
+      district = "Anantapur",
+      scope = scope
+    )
+  }
+
+  fun verifyPhoneAndLogin(
+    phone: String,
+    otp: String,
+    farmerName: String,
+    district: String,
+    scope: CoroutineScope
+  ) {
     scope.launch(Dispatchers.IO) {
       withContext(Dispatchers.Main) {
         isAuthLoading = true
         authErrorMessage = null
       }
-      
-      delay(1500) // Simulate network delay
-      
-      withContext(Dispatchers.Main) {
-        isAuthLoading = false
-        if (phone.length == 10 && (otp == "1234" || otp.length == 4)) {
-          userPhoneNumber = phone
-          isLoggedIn = true
-        } else {
-          authErrorMessage = "Invalid phone number or OTP. Please try again."
+
+      try {
+        delay(1500) // Simulate network delay
+        val profile = authGateway.verifyOtp(
+          phone = phone,
+          otp = otp,
+          farmerName = farmerName,
+          district = district,
+          language = currentLanguage
+        )
+
+        withContext(Dispatchers.Main) {
+          farmerProfile = profile
+          currentLanguage = profile.preferredLanguage
+          currentTab = 0
+          authErrorMessage = null
+          persistSessionState()
+        }
+      } catch (e: IllegalArgumentException) {
+        withContext(Dispatchers.Main) {
+          authErrorMessage = e.message ?: "Use the demo OTP 1234 for now."
+        }
+      } finally {
+        withContext(Dispatchers.Main) {
+          isAuthLoading = false
         }
       }
     }
   }
 
+  fun setCurrentLanguage(language: AppLanguage) {
+    currentLanguage = language
+    farmerProfile = farmerProfile?.copy(preferredLanguage = language)
+    persistSessionState()
+  }
+
+  fun setAutoSpeakEnabled(enabled: Boolean) {
+    isAutoSpeakEnabled = enabled
+    persistSessionState()
+  }
+
+  fun updateFarmerProfile(
+    name: String,
+    district: String,
+    primaryCrop: String,
+    trustedHelperPhone: String
+  ) {
+    farmerProfile = farmerProfile?.copy(
+      name = name.ifBlank { farmerProfile?.name ?: "Farmer" },
+      district = district.ifBlank { farmerProfile?.district ?: "Anantapur" },
+      primaryCrop = primaryCrop.ifBlank { farmerProfile?.primaryCrop ?: "Millet" },
+      trustedHelperPhone = trustedHelperPhone.ifBlank { farmerProfile?.trustedHelperPhone ?: "+919000011223" }
+    )
+    persistSessionState()
+  }
+
   fun logout() {
-    isLoggedIn = false
-    userPhoneNumber = ""
+    farmerProfile = null
+    currentTab = 0
+    advisoryResult = null
+    diagnosticReport = null
+    voiceAdvisoryCard = null
+    recordedQueryText = null
+    simulatedImageName = null
+    authErrorMessage = null
+    sessionStore?.clear()
+  }
+
+  fun attachSessionStore(context: Context) {
+    if (sessionStore != null) return
+
+    sessionStore = LocalSessionStore(context.applicationContext)
+    val storedState = sessionStore?.loadState() ?: return
+    farmerProfile = storedState.profile
+    currentLanguage = storedState.profile?.preferredLanguage ?: storedState.currentLanguage
+    isAutoSpeakEnabled = storedState.isAutoSpeakEnabled
+  }
+
+  private fun persistSessionState() {
+    sessionStore?.saveState(
+      profile = farmerProfile,
+      currentLanguage = currentLanguage,
+      isAutoSpeakEnabled = isAutoSpeakEnabled
+    )
   }
 
 
@@ -559,11 +755,5 @@ class KisanAlertViewModel : ViewModel() {
       bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
     }
     return file
-  }
-
-  private fun extractJsonBlock(rawInput: String): String {
-    val regex = Regex("""\{.*\}""", RegexOption.DOT_MATCHES_ALL)
-    val matchResult = regex.find(rawInput)
-    return matchResult?.value ?: rawInput
   }
 }

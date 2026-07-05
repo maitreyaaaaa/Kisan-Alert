@@ -2,9 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,308 +10,347 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Landscape
-import androidx.compose.material.icons.filled.Opacity
-import androidx.compose.material.icons.filled.PhoneInTalk
-import androidx.compose.material.icons.filled.Sms
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import com.example.data.model.AlertItem
-import com.example.ui.components.DashboardCanvasIllustration
-import com.example.ui.components.FarmMetricCard
 import com.example.util.LocalizedStrings
 import com.example.viewmodel.KisanAlertViewModel
 
 @Composable
-fun HomeDashboardScreen(viewModel: KisanAlertViewModel) {
+fun HomeDashboardScreen(
+  viewModel: KisanAlertViewModel,
+  onOpenAsk: () -> Unit,
+  onOpenAlerts: () -> Unit,
+  onOpenAccount: () -> Unit
+) {
   val lang = viewModel.currentLanguage
-  var selectedAlertForDialog by remember { mutableStateOf<AlertItem?>(null) }
+  val profile = viewModel.farmerProfile
+  val homeSummary = viewModel.homeSummary
+  val page = Color(0xFFF7F4ED)
+  val card = Color(0xFFFFFBF5)
+  val border = Color(0xFFE3DDD1)
+  val brandInk = Color(0xFF1F2A44)
+  val muted = Color(0xFF697586)
+  val brandBlue = Color(0xFF2D4F8F)
+  val warmAccent = Color(0xFFF28C38)
+  val success = Color(0xFF4B8B6A)
 
-  LazyColumn(
+  Column(
     modifier = Modifier
       .fillMaxSize()
-      .padding(horizontal = 16.dp, vertical = 8.dp),
+      .background(page)
+      .verticalScroll(rememberScrollState())
+      .padding(16.dp),
     verticalArrangement = Arrangement.spacedBy(16.dp)
   ) {
-    // Elegant dynamic Canvas illustration
-    item {
-      DashboardCanvasIllustration()
-    }
-
-    // A. FARM STATUS SECTION
-    item {
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Card(
+      colors = CardDefaults.cardColors(containerColor = card),
+      border = BorderStroke(1.dp, border),
+      shape = RoundedCornerShape(24.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      Column(
+        modifier = Modifier.padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
         Text(
-          text = LocalizedStrings.get("farm_status", lang).uppercase(),
-          color = Color(0xFF52B788), // soft mint
-          fontSize = 13.sp,
-          fontWeight = FontWeight.Bold,
-          letterSpacing = 1.sp
+          text = LocalizedStrings.get("greeting_short", lang),
+          color = warmAccent,
+          fontSize = 14.sp,
+          fontWeight = FontWeight.Bold
         )
-
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          // Card 1: Soil Moisture
-          FarmMetricCard(
-            modifier = Modifier.weight(1f),
-            title = LocalizedStrings.get("moisture", lang),
-            value = LocalizedStrings.get("moisture_status", lang),
-            icon = Icons.Default.Opacity,
-            iconTint = Color(0xFF60A5FA), // High contrast sky blue
-            borderColor = Color(0xFF1E3A8A)
-          )
-
-          // Card 2: Groundwater Level
-          FarmMetricCard(
-            modifier = Modifier.weight(1f),
-            title = LocalizedStrings.get("groundwater", lang),
-            value = LocalizedStrings.get("groundwater_status", lang),
-            icon = Icons.Default.Landscape,
-            iconTint = Color(0xFF34D399), // Mint green
-            borderColor = Color(0xFF065F46)
-          )
+        Text(
+          text = homeSummary.headline,
+          color = brandInk,
+          fontSize = 26.sp,
+          fontWeight = FontWeight.ExtraBold
+        )
+        Text(
+          text = homeSummary.intro,
+          color = muted,
+          fontSize = 14.sp,
+          lineHeight = 20.sp
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          HomePill(homeSummary.districtTag, brandBlue)
+          HomePill(homeSummary.cropTag, success)
         }
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        // Card 3: Weather (Full-Width for balance)
-        FarmMetricCard(
-          modifier = Modifier.fillMaxWidth(),
-          title = LocalizedStrings.get("weather", lang),
-          value = LocalizedStrings.get("weather_status", lang) + " (Humidity: 45%)",
-          icon = Icons.Default.WbSunny,
-          iconTint = Color(0xFFFBBF24), // Gold yellow
-          borderColor = Color(0xFF78350F)
-        )
       }
     }
 
-    // B. RECENT ALERTS SECTION
-    item {
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    if (profile != null) {
+      Card(
+        colors = CardDefaults.cardColors(containerColor = card),
+        border = BorderStroke(1.dp, border),
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth()
+      ) {
         Row(
-          modifier = Modifier.fillMaxWidth(),
-          verticalAlignment = Alignment.CenterVertically
+          modifier = Modifier.padding(18.dp),
+          horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-          Icon(
-            Icons.Default.Warning,
-            contentDescription = "Alerts",
-            tint = Color(0xFFF59E0B), // Harvest Gold
-            modifier = Modifier.size(18.dp)
+          HomeStatCard(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.Mic,
+            iconTint = brandBlue,
+            label = LocalizedStrings.get("account_profile_name", lang),
+            value = profile.name
           )
-          Spacer(modifier = Modifier.width(6.dp))
-          Text(
-            text = LocalizedStrings.get("recent_alerts", lang),
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.ExtraBold
+          HomeStatCard(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.WbSunny,
+            iconTint = warmAccent,
+            label = LocalizedStrings.get("account_profile_crop", lang),
+            value = profile.primaryCrop
           )
         }
+      }
+    }
 
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-          viewModel.alertList.forEach { alert ->
-            Card(
-              colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-              border = BorderStroke(
-                1.dp,
-                if (alert.type == "VOICE") Color(0xFFF59E0B) else Color(0xFF2D6A4F)
-              ),
-              modifier = Modifier
-                .fillMaxWidth()
-                .clickable { selectedAlertForDialog = alert }
-                .testTag("alert_card_${alert.id}"),
-              shape = RoundedCornerShape(12.dp)
-            ) {
-              Row(
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .padding(14.dp),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                // Warning icon circle
-                Box(
-                  modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                      if (alert.type == "VOICE") Color(0xFF78350F) else Color(0xFF14532D),
-                      shape = CircleShape
-                    ),
-                  contentAlignment = Alignment.Center
-                ) {
-                  Icon(
-                    imageVector = if (alert.type == "VOICE") Icons.Default.PhoneInTalk else Icons.Default.Sms,
-                    contentDescription = alert.type,
-                    tint = if (alert.type == "VOICE") Color(0xFFFBBF24) else Color(0xFF52B788),
-                    modifier = Modifier.size(20.dp)
-                  )
-                }
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+      HomeStatCard(
+        modifier = Modifier.weight(1f),
+        icon = Icons.Default.WbSunny,
+        iconTint = warmAccent,
+        label = LocalizedStrings.get("home_weather_label", lang),
+        value = homeSummary.weatherValue
+      )
+      HomeStatCard(
+        modifier = Modifier.weight(1f),
+        icon = Icons.Default.Warning,
+        iconTint = brandBlue,
+        label = LocalizedStrings.get("home_top_alert_label", lang),
+        value = homeSummary.topAlertTitle
+      )
+    }
 
-                Spacer(modifier = Modifier.width(12.dp))
+    Card(
+      colors = CardDefaults.cardColors(containerColor = card),
+      border = BorderStroke(1.dp, border),
+      shape = RoundedCornerShape(20.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      Column(
+        modifier = Modifier.padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+      ) {
+        Text(
+          text = LocalizedStrings.get("home_next_title", lang),
+          color = brandInk,
+          fontSize = 18.sp,
+          fontWeight = FontWeight.ExtraBold
+        )
+        homeSummary.priorities.forEach { item ->
+          HomePriorityRow(
+            title = item.title,
+            detail = item.detail
+          )
+        }
+      }
+    }
 
-                Column(modifier = Modifier.weight(1f)) {
-                  Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                  ) {
-                    Text(
-                      text = alert.title,
-                      color = Color.White,
-                      fontSize = 14.sp,
-                      fontWeight = FontWeight.Bold,
-                      maxLines = 1,
-                      overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                      text = alert.time,
-                      color = Color(0xFF94A3B8),
-                      fontSize = 11.sp,
-                      fontWeight = FontWeight.Medium
-                    )
-                  }
-                  Spacer(modifier = Modifier.height(4.dp))
-                  Text(
-                    text = alert.subtitle,
-                    color = Color(0xFF94A3B8),
-                    fontSize = 12.sp,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                  )
-                }
-              }
-            }
-          }
+    Card(
+      colors = CardDefaults.cardColors(containerColor = card),
+      border = BorderStroke(1.dp, border),
+      shape = RoundedCornerShape(20.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      Column(
+        modifier = Modifier.padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+      ) {
+        Text(
+          text = LocalizedStrings.get("home_support_title", lang),
+          color = brandInk,
+          fontSize = 18.sp,
+          fontWeight = FontWeight.ExtraBold
+        )
+        Text(
+          text = homeSummary.supportCopy,
+          color = muted,
+          fontSize = 13.sp,
+          lineHeight = 18.sp
+        )
+        OutlinedButton(
+          onClick = onOpenAccount,
+          border = BorderStroke(1.dp, border),
+          shape = RoundedCornerShape(14.dp),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Text(
+            text = LocalizedStrings.get("home_support_button", lang),
+            color = brandInk,
+            fontWeight = FontWeight.Bold
+          )
+        }
+      }
+    }
+
+    Card(
+      colors = CardDefaults.cardColors(containerColor = card),
+      border = BorderStroke(1.dp, border),
+      shape = RoundedCornerShape(20.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      Column(
+        modifier = Modifier.padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+      ) {
+        Text(
+          text = LocalizedStrings.get("home_actions_title", lang),
+          color = brandInk,
+          fontSize = 18.sp,
+          fontWeight = FontWeight.ExtraBold
+        )
+        Button(
+          onClick = onOpenAsk,
+          colors = ButtonDefaults.buttonColors(containerColor = brandBlue),
+          shape = RoundedCornerShape(14.dp),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Icon(Icons.Default.Mic, contentDescription = "Ask by voice")
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(LocalizedStrings.get("home_action_ask", lang))
+        }
+        OutlinedButton(
+          onClick = onOpenAsk,
+          border = BorderStroke(1.dp, border),
+          shape = RoundedCornerShape(14.dp),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Icon(Icons.Default.CameraAlt, contentDescription = "Check crop image", tint = brandInk)
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(LocalizedStrings.get("home_action_photo", lang), color = brandInk)
+        }
+        OutlinedButton(
+          onClick = onOpenAlerts,
+          border = BorderStroke(1.dp, border),
+          shape = RoundedCornerShape(14.dp),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Icon(Icons.Default.Warning, contentDescription = "See alerts", tint = warmAccent)
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(LocalizedStrings.get("home_action_alerts", lang), color = brandInk)
         }
       }
     }
   }
+}
 
-  // Visual Detail Dialog for emergency broadcasts
-  selectedAlertForDialog?.let { alert ->
-    Dialog(onDismissRequest = { selectedAlertForDialog = null }) {
-      Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xFF1E293B),
-        border = BorderStroke(2.dp, Color(0xFF52B788)),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column(
-          modifier = Modifier.padding(20.dp),
-          verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-              imageVector = if (alert.type == "VOICE") Icons.Default.PhoneInTalk else Icons.Default.Sms,
-              contentDescription = "Alert Symbol",
-              tint = Color(0xFFF59E0B),
-              modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = "Dispatch Verification",
-              color = Color.White,
-              fontSize = 18.sp,
-              fontWeight = FontWeight.Bold
-            )
-          }
+@Composable
+private fun HomePill(label: String, color: Color) {
+  Text(
+    text = label,
+    color = color,
+    fontSize = 12.sp,
+    fontWeight = FontWeight.Bold,
+    modifier = Modifier
+      .background(color.copy(alpha = 0.10f), RoundedCornerShape(999.dp))
+      .padding(horizontal = 10.dp, vertical = 6.dp)
+  )
+}
 
-          HorizontalDivider(color = Color(0xFF334155))
+@Composable
+private fun HomeStatCard(
+  modifier: Modifier = Modifier,
+  icon: ImageVector,
+  iconTint: Color,
+  label: String,
+  value: String
+) {
+  val card = Color(0xFFFFFBF5)
+  val border = Color(0xFFE3DDD1)
+  val brandInk = Color(0xFF1F2A44)
+  val muted = Color(0xFF697586)
 
-          Text(
-            text = alert.title,
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold
-          )
+  Card(
+    colors = CardDefaults.cardColors(containerColor = card),
+    border = BorderStroke(1.dp, border),
+    shape = RoundedCornerShape(20.dp),
+    modifier = modifier
+  ) {
+    Column(
+      modifier = Modifier.padding(16.dp),
+      verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+      Icon(icon, contentDescription = label, tint = iconTint)
+      Text(
+        text = label,
+        color = muted,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold
+      )
+      Text(
+        text = value,
+        color = brandInk,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
+      )
+    }
+  }
+}
 
-          Text(
-            text = "Broadcast Mode: " + if (alert.type == "VOICE") "Automated Regional IVR Voice Call" else "Regional SMS Dispatch",
-            color = Color(0xFF52B788),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-          )
+@Composable
+private fun HomePriorityRow(title: String, detail: String) {
+  val border = Color(0xFFE3DDD1)
+  val brandInk = Color(0xFF1F2A44)
+  val muted = Color(0xFF697586)
+  val brandBlue = Color(0xFF2D4F8F)
 
-          Box(
-            modifier = Modifier
-              .fillMaxWidth()
-              .background(Color(0xFF0F172A), shape = RoundedCornerShape(8.dp))
-              .padding(12.dp)
-          ) {
-            Text(
-              text = alert.detailScript,
-              color = Color(0xFFF1F5F9),
-              fontSize = 13.sp,
-              fontWeight = FontWeight.Medium
-            )
-          }
-
-          Text(
-            text = "Status: Sent to 14,250 registered farmer nodes in regional cluster. 94.2% delivery success.",
-            color = Color(0xFF94A3B8),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Normal
-          )
-
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            if (alert.type == "VOICE") {
-              var isCallRequested by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-              Button(
-                onClick = {
-                  isCallRequested = true
-                  viewModel.onSpeakText?.invoke(
-                    "Placing outbound voice warning call to your registered phone number. Calling detail: ${alert.title}. Details: ${alert.detailScript}"
-                  )
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFBBF24)),
-                modifier = Modifier.padding(end = 8.dp)
-              ) {
-                Text(if (isCallRequested) "Calling..." else "Voice Call Me", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold)
-              }
-            }
-
-            Button(
-              onClick = { selectedAlertForDialog = null },
-              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B4332))
-            ) {
-              Text("Close", color = Color.White)
-            }
-          }
-        }
+  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(verticalAlignment = Alignment.Top) {
+      Text(
+        text = "-",
+        color = brandBlue,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
+      )
+      Spacer(modifier = Modifier.width(8.dp))
+      Column {
+        Text(
+          text = title,
+          color = brandInk,
+          fontSize = 14.sp,
+          fontWeight = FontWeight.Bold
+        )
+        Text(
+          text = detail,
+          color = muted,
+          fontSize = 13.sp,
+          lineHeight = 18.sp
+        )
       }
     }
+    Spacer(
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(1.dp)
+        .background(border)
+    )
   }
 }
